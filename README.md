@@ -1,0 +1,1 @@
+# solarplant.go

@@ -1,0 +1,38 @@
+<table>
+  <thead>
+    <tr>
+      <th>Hour (UTC)</th>
+      <th>Cloud cover (octas)</th>
+      <th>Temp (°C)</th>
+      <th>Precipitation (mm)</th>
+      <th>Energy price (SEK/kWh)</th>
+      <th>Batt lvl (%)</th>
+      <th>Batt net load (kWh)</th>
+      <th>Cons. act. (kWh)</th>
+      <th>Cons. est. (kWh)</th>
+      <th>Prod. act. (kWh)</th>
+      <th>Prod. est. (kWh)</th>
+      <th>Prod. tot. (kWh)</th>
+      <th>Strategy</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+    <tr>
+      <td style="white-space: nowrap;">{{ .When.Date }} - {{ .When.Hour }}</td>
+      <td>{{ .CloudCover }}</td>
+      <td>{{ OneDecimal .Temperature }}</td>
+      <td>{{ TwoDecimals .Precipitation }}</td>
+      <td>{{ TwoDecimals .EnergyPrice }}</td>
+      <td>{{ TwoDecimals .BatteryLevel }}</td>
+      <td>{{ TwoDecimals .BatteryNetLoad }}</td>
+      <td>{{ TwoDecimals .Consumption }}</td>
+      <td>{{ NullFloat64 .EstimatedConsumption }}</td>
+      <td>{{ TwoDecimals .Production }}</td>
+      <td>{{ NullFloat64 .EstimatedProduction }}</td>
+      <td>{{ TwoDecimals .ProductionLifetime }}</td>
+      <td>{{ .Strategy }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>

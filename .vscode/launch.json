@@ -1,0 +1,42 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Solarplant",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "envFile": "${workspaceFolder}/.env",
+      "program": "${workspaceFolder}/main.go",
+    },
+    {
+      "name": "Launch Energy Forecast",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "envFile": "${workspaceFolder}/.env",
+      "program": "${workspaceFolder}/cmd/energy_forecast/main.go",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Launch Energy Price",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "envFile": "${workspaceFolder}/.env",
+      "program": "${workspaceFolder}/cmd/energy_price/main.go",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Test Current File",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${relativeFileDirname}",
+      "showLog": false
+    }       
+  ]
+}

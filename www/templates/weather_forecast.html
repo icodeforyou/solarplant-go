@@ -1,0 +1,20 @@
+<table>
+  <thead>
+    <tr>
+      <th>Hour (UTC)</th>
+      <th>Cloud cover (octas)</th>
+      <th>Temp (°C)</th>
+      <th>Precipitation (mm)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+    <tr>
+      <td>{{ .When.Date }}&nbsp;-&nbsp;{{ .When.Hour }}</td>
+      <td>{{ .CloudCover }}</td>
+      <td>{{ OneDecimal .Temperature }}</td>
+      <td>{{ TwoDecimals .Precipitation }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Solarplant</title>
+  <!-- curl -s https://example.com/yada.min.js | openssl dgst -sha384 -binary | openssl base64 -A -->
+  <script defer src="https://unpkg.com/htmx.org@2.0.0/dist/htmx.min.js"
+    integrity="sha384-wS5l5IKJBvK6sPTKa2WZ1js3d947pvWXbPJ1OmWfEuxLgeHcEbjUUA5i9V5ZkpCw"
+    crossorigin="anonymous"></script>
+  <script defer src="https://unpkg.com/htmx.org@1.9.12/dist/ext/ws.js"
+    integrity="sha384-QILjBFil9/FrWrP1Y9Qh3vBfd7kiQE8h1BX9auwiVgsFlGwe4tEl7Y966BG178W6"
+    crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"
+    integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC"
+    crossorigin="anonymous"></script>
+
+  <!--script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script-->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <link rel="stylesheet" href="/main.css">
+  <script>
+    window.addEventListener("load", () => {
+      document.querySelector("#buttons > button").click()
+      fetch(`/chart`)
+        .then((res) => res.json())
+        .then(data => {
+          new Chart(document.getElementById('chart1'), data[0])
+          new Chart(document.getElementById('chart2'), data[1])
+        })
+        .catch(console.error);
+    });
+
+    function setActive(buttonEl) {
+      document.querySelectorAll('button').forEach(btn => btn.classList.remove('secondary'));
+      buttonEl.classList.add('secondary');
+    }
+  </script>
+</head>
+
+<body>
+  <main class="container-fluid">
+    <h1>Solarplant</h1>
+    <div id="top_panel">
+      <div hx-ext="ws" ws-connect="/ws">
+        <div id="real_time_data"></div>
+      </div>
+      <div id="chart_container">
+        <canvas id="chart1"></canvas>
+        <canvas id="chart2"></canvas>
+      </div>
+    </div>
+    <div role="group">
+      <button class="outline" hx-get="/time_series" hx-target="#data" hx-on::after-request="setActive(this)">
+        Time Series
+      </button>
+      <button class="outline" hx-get="/energy_price" hx-target="#data" hx-on::after-request="setActive(this)">
+        Energy Price
+      </button>
+      <button class="outline" hx-get="/weather_forecast" hx-target="#data" hx-on::after-request="setActive(this)">
+        Weather Forecast
+      </button>
+      <button class="outline" hx-get="/energy_forecast" hx-target="#data" hx-on::after-request="setActive(this)">
+        Energy Forecast
+      </button>
+      <button class="outline" hx-get="/planning" hx-target="#data" hx-on::after-request="setActive(this)">
+        Planning
+      </button>
+    </div>
+    <div id="data" style="margin-top: 10px;"></div>
+  </main>
+</body>
+
+</html>

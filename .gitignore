@@ -1,0 +1,5 @@
+*.db
+*.tar
+.env
+bin/
+deploy.sh

@@ -1,0 +1,16 @@
+<table>
+  <thead>
+    <tr>
+      <th>Hour (UTC)</th>
+      <th>Strategy</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+    <tr>
+      <td style="white-space: nowrap;">{{ .When.Date }} - {{ .When.Hour }}</td>
+      <td>{{ .Strategy }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>

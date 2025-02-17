@@ -1,0 +1,55 @@
+api:
+  address: localhost
+  port: 8080
+  www_dir: ./www_ext
+
+database:
+  path: ./data/solarplant.db
+
+ferroamp:
+  host: ferroamp.internal
+  port: 1883
+  username: extapi
+  password: SECRET
+
+tibber:
+  homeid: HOMEID
+  apitoken: SECRET
+
+weather_forecast:
+  latitude: 59.0000
+  longitude: 16.2000
+  run_at: "0 */4 * * *"
+
+energy_forecast:
+  hours_ahead: 8
+  historical_days: 7
+  cloud_cover_impact: 0.5
+  run_at: "1 */4 * * *"
+
+energy_price:
+  tax_including_vat: 0.535
+  tax_reduction: 0.6
+  grid_benefit: 0.02
+  area: SE3
+  currency: SEK
+  postal_code: 64191
+  run_at: "2 */2 * * *"
+
+planner:
+  hours_ahead: 8
+  run_at: "3 */1 * * *"
+  grid_max_power: 25
+
+battery_spec:
+  capacity: 10
+  min_level: 10
+  max_level: 100
+  max_charge_rate: 3
+  max_discharge_rate: 3
+  degradation_cost: 0.5
+
+battery_regulator_strategy:
+  interval: 10
+  update_threshold: 250
+

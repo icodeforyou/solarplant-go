@@ -1,0 +1,16 @@
+<table>
+  <thead>
+    <tr>
+      <th>Hour (UTC)</th>
+      <th>Price SEK/kWh</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+    <tr>
+      <td style="white-space: nowrap;">{{ .When.Date }} - {{ .When.Hour }}</td>
+      <td>{{ TwoDecimals .Price }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>

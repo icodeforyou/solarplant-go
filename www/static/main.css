@@ -1,0 +1,33 @@
+button {
+  --pico-form-element-spacing-vertical: 0.25rem;
+  --pico-form-element-spacing-horozontal: 0.25rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: small;
+}
+
+th,
+td {
+  border: 1px solid rgb(75, 75, 75);
+  padding: 5px;
+  text-align: left;
+}
+
+#top_panel {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  padding-bottom: 20px;
+}
+
+#real_time_data {
+  min-width: 300px;
+}
+
+#chart_container {
+  height: 200px;
+  width: 100%;
+}

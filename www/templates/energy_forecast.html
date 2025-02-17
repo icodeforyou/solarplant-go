@@ -1,0 +1,18 @@
+<table>
+  <thead>
+    <tr>
+      <th>Hour (UTC)</th>
+      <th>Production (kW)</th>
+      <th>Consumption (kW)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+    <tr>
+      <td style="white-space: nowrap;">{{ .When.Date }} - {{ .When.Hour }}</td>
+      <td>{{ TwoDecimals .Production }}</td>
+      <td>{{ TwoDecimals .Consumption }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>

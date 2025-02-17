@@ -1,0 +1,28 @@
+<div id="real_time_data">
+  <table>
+    <tr>
+      <td>Grid Power</td>
+      <td style="text-align: right">{{ Flt64ToStr .GridPower }} kW</td>
+    </tr>
+    <tr>
+      <td>Solar Power</td>
+      <td style="text-align: right">{{ Flt64ToStr .SolarPower }} kW</td>
+    </tr>
+    <tr>
+      <td>Battery Power</td>
+      <td style="text-align: right">{{ Flt64ToStr .BatteryPower }} kW</td>
+    </tr>
+    <tr>
+      <td>Battery Level</td>
+      <td style="text-align: right">{{ Flt64ToStr .BatteryLevel }} %</td>
+    </tr>
+    <tr>
+      <td>Energy Price</td>
+      <td style="text-align: right">{{ Flt64ToStr .EnergyPrice }} SEK</td>
+    </tr>
+    <tr>
+      <td>Battery Strategy</td>
+      <td style="text-align: right">{{ .Strategy }}</td>
+    </tr>
+  </table>
+</div>
