@@ -2,9 +2,13 @@ package www
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"io/fs"
+	"log"
 	"log/slog"
 	"net/http"
+	"os"
 	"path"
 	"time"
 
@@ -24,14 +28,13 @@ type Server struct {
 	tm     *TemplateManager
 }
 
+//go:embed static
+var embeddedStaticDir embed.FS
+
 func StartServer(logger *slog.Logger, config config.AppConfigApi, db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemData) *Server {
-	tm, err := NewTemplateManager(path.Join(config.WwwDir, "templates"))
+	tm, err := NewTemplateManager(config.WwwDir)
 	if err != nil {
 		logger.Error("template manager failed", slog.Any("error", err))
-	}
-	err = tm.Watch()
-	if err != nil {
-		logger.Error("template watch failed", slog.Any("error", err))
 	}
 
 	s := &Server{
@@ -45,7 +48,7 @@ func StartServer(logger *slog.Logger, config config.AppConfigApi, db *database.D
 
 	go s.hub.Run()
 
-	http.Handle("/", http.FileServer(http.Dir(path.Join(config.WwwDir, "static"))))
+	http.Handle("/", staticFilesHandler(config.WwwDir))
 	http.HandleFunc("/time_series", NewTimeSeriesHandler(s.config, s.db, s.tm, tasks.TimeSeries))
 	http.HandleFunc("/energy_price", NewEnergyPriceHandler(s.config, s.db, s.tm, tasks.EnergyPrice))
 	http.HandleFunc("/weather_forecast", NewWeatherForecastHandler(s.config, s.db, s.tm, tasks.WeatherForecast))
@@ -128,4 +131,19 @@ func (s *Server) Run(ctx context.Context) {
 			s.hub.Broadcast <- buf.Bytes()
 		}
 	}
+}
+
+func staticFilesHandler(extDir *string) http.Handler {
+	if extDir != nil && *extDir != "" {
+		staticDir := path.Join(*extDir, "static")
+		if _, err := os.Stat(staticDir); err == nil {
+			return http.FileServer(http.Dir(staticDir))
+		}
+	}
+
+	fsys, err := fs.Sub(embeddedStaticDir, "static")
+	if err != nil {
+		log.Panic(err)
+	}
+	return http.FileServer(http.FS(fsys))
 }

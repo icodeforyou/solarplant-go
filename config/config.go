@@ -10,7 +10,11 @@ import (
 type AppConfigApi struct {
 	Address string
 	Port    int16
-	WwwDir  string `mapstructure:"www_dir"`
+	// If not assigned, the server will serve embedded files.
+	// If assigned, the server will serve files from the directory,
+	// that must contain a "static" and "templates" directory.
+	// This is useful for development.
+	WwwDir *string `mapstructure:"www_dir"`
 }
 
 type AppConfigDatabase struct{ Path string }
@@ -105,10 +109,6 @@ func Load() (config *AppConfig) {
 
 	if err := viper.Unmarshal(&c); err != nil {
 		panic(fmt.Errorf("unable to unmarchal config file: %w", err))
-	}
-
-	if c.Api.WwwDir == "" {
-		c.Api.WwwDir = "./www"
 	}
 
 	return &c

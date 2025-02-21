@@ -48,10 +48,12 @@
       </div>
       <div id="chart_container">
         <canvas id="chart1"></canvas>
+      </div>
+      <div id="chart_container">
         <canvas id="chart2"></canvas>
       </div>
     </div>
-    <div role="group">
+    <div id="buttons" role="group">
       <button class="outline" hx-get="/time_series" hx-target="#data" hx-on::after-request="setActive(this)">
         Time Series
       </button>

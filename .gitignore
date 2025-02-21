@@ -1,5 +1,5 @@
-*.db
 *.tar
 .env
 bin/
+data/
 deploy.sh

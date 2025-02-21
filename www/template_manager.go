@@ -3,6 +3,7 @@ package www
 import (
 	"bytes"
 	"database/sql"
+	"embed"
 	"fmt"
 	"html/template"
 	"log/slog"
@@ -12,6 +13,9 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 )
+
+//go:embed templates
+var templatesDirEmbed embed.FS
 
 type RealTimeData struct {
 	GridPower    float64
@@ -23,7 +27,6 @@ type RealTimeData struct {
 }
 
 type TemplateManager struct {
-	dir       string
 	templates *template.Template
 	mutex     sync.RWMutex
 	logger    *slog.Logger
@@ -53,29 +56,77 @@ var funcMap = template.FuncMap{
 	},
 }
 
-func NewTemplateManager(dir string) (*TemplateManager, error) {
+func NewTemplateManager(extDir *string) (*TemplateManager, error) {
 	tm := &TemplateManager{
-		dir:    dir,
 		logger: slog.Default(),
 	}
-	if err := tm.Reload(); err != nil {
+
+	if extDir != nil {
+		if err := tm.loadExternalTemplates(*extDir); err != nil {
+			return nil, err
+		}
+	} else if err := tm.loadInternalTemplates(); err != nil {
 		return nil, err
 	}
 
 	return tm, nil
 }
 
-func (tm *TemplateManager) Reload() error {
-	tm.logger.Debug("reloading templates...")
-	pattern := filepath.Join(tm.dir, "*.html")
-	tmpl, err := template.New("").Funcs(funcMap).ParseGlob(pattern)
+func (tm *TemplateManager) loadInternalTemplates() error {
+	tm.logger.Debug("loading embedded templates...")
+	tmpl, err := template.New("").Funcs(funcMap).ParseFS(templatesDirEmbed, "templates/*.html")
 	if err != nil {
 		return fmt.Errorf("failed to parse templates: %w", err)
 	}
-
-	tm.mutex.Lock()
 	tm.templates = tmpl
-	tm.mutex.Unlock()
+	return nil
+}
+
+func (tm *TemplateManager) loadExternalTemplates(extDir string) error {
+	templatesDir := filepath.Join(extDir, "templates")
+	reload := func() error {
+		tm.logger.Debug("loading external templates...")
+		pattern := filepath.Join(templatesDir, "*.html")
+		tmpl, err := template.New("").Funcs(funcMap).ParseGlob(pattern)
+		if err != nil {
+			return fmt.Errorf("failed to parse templates: %w", err)
+		}
+
+		tm.mutex.Lock()
+		tm.templates = tmpl
+		tm.mutex.Unlock()
+		return nil
+	}
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return fmt.Errorf("failed to create template watcher: %w", err)
+	}
+
+	go func() {
+		for {
+			select {
+			case event := <-watcher.Events:
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					if err := reload(); err != nil {
+						tm.logger.Error("error reloading templates", slog.Any("error", err))
+					} else {
+						tm.logger.Debug("templates reloaded")
+					}
+				}
+			case err := <-watcher.Errors:
+				tm.logger.Debug("error watching templates", slog.Any("error", err))
+			}
+		}
+	}()
+
+	if err := watcher.Add(templatesDir); err != nil {
+		return fmt.Errorf("failed to watch templates: %w", err)
+	}
+
+	if err := reload(); err != nil {
+		return fmt.Errorf("failed to load templates: %w", err)
+	}
 
 	return nil
 }
@@ -104,30 +155,4 @@ func (tm *TemplateManager) ExecuteToWriter(name string, data interface{}, wr *ht
 	}
 
 	return nil
-}
-
-func (tm *TemplateManager) Watch() error {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		for {
-			select {
-			case event := <-watcher.Events:
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					if err := tm.Reload(); err != nil {
-						tm.logger.Error("error reloading templates", slog.Any("error", err))
-					} else {
-						tm.logger.Debug("templates reloaded")
-					}
-				}
-			case err := <-watcher.Errors:
-				tm.logger.Debug("error watching templates", slog.Any("error", err))
-			}
-		}
-	}()
-
-	return watcher.Add(tm.dir)
 }
