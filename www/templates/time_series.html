@@ -12,7 +12,6 @@
       <th>Cons. est. (kWh)</th>
       <th>Prod. act. (kWh)</th>
       <th>Prod. est. (kWh)</th>
-      <th>Prod. tot. (kWh)</th>
       <th>Strategy</th>
     </tr>
   </thead>
@@ -30,7 +29,6 @@
       <td>{{ NullFloat64 .EstimatedConsumption }}</td>
       <td>{{ TwoDecimals .Production }}</td>
       <td>{{ NullFloat64 .EstimatedProduction }}</td>
-      <td>{{ TwoDecimals .ProductionLifetime }}</td>
       <td>{{ .Strategy }}</td>
     </tr>
     {{ end }}
