@@ -78,7 +78,7 @@ func (d *Database) GetPlanningForHour(from hours.DateHour) (PlanningRow, error) 
 
 func initPlanning(db *sql.DB) {
 	_, err := db.Exec(`
-	CREATE TABLE planning (
+	CREATE TABLE IF NOT EXISTS planning (
 		date CHAR(10) NOT NULL,
 		hour INTEGER NOT NULL,
 		strategy CHAR(16),
@@ -92,5 +92,7 @@ func initPlanning(db *sql.DB) {
 		UPDATE planning SET updated = (strftime('%s','now')) 
 		WHERE rowid = NEW.rowid;
 	END;`)
-	panicOnError(err, "creating planning table")
+	if err != nil {
+		slog.Info("error when creating planning table", slog.Any("error", err))
+	}
 }

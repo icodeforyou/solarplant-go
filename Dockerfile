@@ -9,6 +9,8 @@ FROM alpine:3.21 AS runner
 RUN apk add --no-cache tzdata
 WORKDIR /app
 COPY --from=builder /build/bin/solarplant solarplant
-COPY www/templates www/templates/
-COPY www/static www/static/
+COPY --from=builder /build/config/config.yaml config/config.yaml
+COPY --from=builder /build/.env .env
+COPY --from=builder /build/www/templates www/templates/
+COPY --from=builder /build/www/static www/static/
 ENTRYPOINT ["/app/solarplant"]

@@ -199,7 +199,7 @@ func (d *Database) GetTimeSeriesWithEstimationsHour(from hours.DateHour) ([]Time
 
 func initTimeSeries(db *sql.DB) {
 	_, err := db.Exec(`
-		CREATE TABLE time_series (
+		CREATE TABLE IF NOT EXISTS time_series (
 			date CHAR(10) NOT NULL,
 			hour INTEGER NOT NULL,
 			cloud_cover INTEGER NOT NULL,
@@ -213,7 +213,9 @@ func initTimeSeries(db *sql.DB) {
 			battery_net_load REAL NOT NULL,
 			CONSTRAINT time_series_pk PRIMARY KEY (date, hour)
 		)`)
-	panicOnError(err, "creating time_series table")
+	if err != nil {
+		slog.Info("error when creating time series table", slog.Any("error", err))
+	}
 }
 
 func scanTimeSeriesHours(rows *sql.Rows) ([]TimeSeriesRow, error) {

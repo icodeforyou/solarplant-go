@@ -41,7 +41,7 @@ func New(ctx context.Context, path string) (*Database, error) {
 		return err
 	})
 
-	exist := exists(path)
+	//exist := exists(path)
 
 	read, err := sql.Open("sqlite", path)
 	if err != nil {
@@ -59,17 +59,17 @@ func New(ctx context.Context, path string) (*Database, error) {
 	write.SetMaxOpenConns(1) // only a single writer ever, no concurrency
 	write.SetConnMaxIdleTime(time.Minute)
 
-	if !exist {
-		logger.Info("database does not exist, creating tables")
-		initWeatcherForecast(write)
-		initEnergyPrice(write)
-		initTimeSeries(write)
-		initEnergyForecast(write)
-		initPlanning(write)
-		initFaSnapshot(write)
-	} else {
+	//if !exist {
+	//logger.Info("database does not exist, creating tables")
+	initWeatcherForecast(write)
+	initEnergyPrice(write)
+	initTimeSeries(write)
+	initEnergyForecast(write)
+	initPlanning(write)
+	initFaSnapshot(write)
+	/*} else {
 		logger.Debug("database exists")
-	}
+	}*/
 
 	return &Database{logger: logger, read: read, write: write}, nil
 }

@@ -102,7 +102,7 @@ func (d *Database) GetEnergyForecastFrom(dh hours.DateHour) ([]EnergyForecastRow
 }
 
 func initEnergyForecast(db *sql.DB) {
-	_, err := db.Exec(`CREATE TABLE energy_forecast (
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS energy_forecast (
 		date CHAR(10) NOT NULL,
 		hour INTEGER NOT NULL,
 		production REAL NOT NULL,
@@ -116,5 +116,7 @@ func initEnergyForecast(db *sql.DB) {
 			UPDATE energy_forecast SET updated = (strftime('%s','now')) 
 			WHERE rowid = NEW.rowid;
 		END;`)
-	panicOnError(err, "creating energy_forecast table")
+	if err != nil {
+		slog.Info("error when creating energy forecast table", slog.Any("error", err))
+	}
 }

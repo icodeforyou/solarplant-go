@@ -72,7 +72,7 @@ func (d *Database) GetEnergyPriceFrom(dh hours.DateHour) ([]EnergyPriceRow, erro
 }
 
 func initEnergyPrice(db *sql.DB) {
-	_, err := db.Exec(`CREATE TABLE energy_price (
+	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS energy_price (
 	date CHAR(10) NOT NULL,
 	hour INTEGER NOT NULL,
 	price REAL,
@@ -85,5 +85,8 @@ func initEnergyPrice(db *sql.DB) {
 		UPDATE energy_price SET updated = (strftime('%s','now'))
 		WHERE rowid = NEW.rowid;
 	END;`)
-	panicOnError(err, "creating energy_price table")
+
+	if err != nil {
+		slog.Info("error when creating energy price table", slog.Any("error", err))
+	}
 }

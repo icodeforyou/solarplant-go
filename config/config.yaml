@@ -1,16 +1,16 @@
 api:
-  address: localhost
+  address: "0.0.0.0"
   port: 8080
-  www_dir: ./www_ext
+  www_dir: "./www"
 
 database:
   path: ./data/solarplant.db
 
 ferroamp:
-  host: ferroamp.internal
+  host: ${FERROAMP_HOST}
   port: 1883
   username: extapi
-  password: SECRET
+  password: ${FERROAMP_PASSWORD}
 
 weather_forecast:
   latitude: 59.0000
@@ -37,12 +37,12 @@ planner:
   grid_max_power: 25
 
 battery_spec:
-  capacity: 10
-  min_level: 10
-  max_level: 100
-  max_charge_rate: 3
-  max_discharge_rate: 3
-  degradation_cost: 0.5
+  capacity: ${BATTERY_CAPACITY}
+  min_level: ${BATTERY_MIN_LEVEL}
+  max_level: ${BATTERY_MAX_LEVEL}
+  max_charge_rate: ${BATTERY_MAX_CHARGE_RATE}
+  max_discharge_rate: ${BATTERY_MAX_DISCHARGE_RATE}
+  degradation_cost: ${BATTERY_DEGRADATION_COST}
 
 battery_regulator_strategy:
   interval: 10

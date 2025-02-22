@@ -101,7 +101,7 @@ func (d *Database) GetWeatherForecastFrom(dh hours.DateHour) ([]WeatherForecastR
 
 func initWeatcherForecast(db *sql.DB) {
 	_, err := db.Exec(`
-		CREATE TABLE weather_forecast (
+		CREATE TABLE IF NOT EXISTS weather_forecast (
 			date CHAR(10) NOT NULL,
 			hour INTEGER NOT NULL,
 			cloud_cover INTEGER NOT NULL,
@@ -117,5 +117,8 @@ func initWeatcherForecast(db *sql.DB) {
 			UPDATE weather_forecast SET updated = (strftime('%s','now')) 
 			WHERE rowid = NEW.rowid;
 		END;`)
-	panicOnError(err, "creating weather forecast table")
+	if err != nil {
+		slog.Info("error when creating weather forecast table", slog.Any("error", err))
+	}
+	//panicOnError(err, "creating weather forecast table")
 }
