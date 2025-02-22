@@ -13,30 +13,12 @@
       "program": "${workspaceFolder}/main.go",
     },
     {
-      "name": "Launch Energy Forecast",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "envFile": "${workspaceFolder}/.env",
-      "program": "${workspaceFolder}/cmd/energy_forecast/main.go",
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "Launch Energy Price",
-      "type": "go",
-      "request": "launch",
-      "mode": "auto",
-      "envFile": "${workspaceFolder}/.env",
-      "program": "${workspaceFolder}/cmd/energy_price/main.go",
-      "cwd": "${workspaceFolder}"
-    },
-    {
       "name": "Test Current File",
       "type": "go",
       "request": "launch",
       "mode": "test",
       "program": "${relativeFileDirname}",
       "showLog": false
-    }       
+    }
   ]
 }
