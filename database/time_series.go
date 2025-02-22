@@ -69,7 +69,7 @@ func (d *Database) SaveTimeSeries(row TimeSeriesRow) {
 		convert.TwoDecimals(row.BatteryLevel),
 		convert.TwoDecimals(row.BatteryNetLoad),
 	)
-	panicOnError(err, "saving time series")
+	panicOnError(err, "saving time series") // TODO: Handle this error properly instead of panicking
 }
 
 func (d *Database) GetTimeSeriesForHour(from hours.DateHour) ([]TimeSeriesRow, error) {

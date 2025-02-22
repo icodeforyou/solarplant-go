@@ -31,7 +31,7 @@ func (d *Database) SaveFaSnapshot(row FaSnapshotRow) {
 		row.When.Hour,
 		jsonData,
 	)
-	panicOnError(err, "saving time series")
+	panicOnError(err, "saving time series") // TODO: Handle this error properly instead of panicking
 }
 
 func (d *Database) GetFaSnapshotForHour(from hours.DateHour) (FaSnapshotRow, error) {

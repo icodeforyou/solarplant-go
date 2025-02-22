@@ -40,7 +40,7 @@ func (d *Database) SaveForcast(rows []WeatherForecastRow) {
 			row.CloudCover,
 			convert.TwoDecimals(row.Temperature),
 			convert.TwoDecimals(row.Precipitation))
-		panicOnError(err, "saving weather forecast")
+		panicOnError(err, "saving weather forecast") // TODO: Handle this error properly instead of panicking
 	}
 }
 

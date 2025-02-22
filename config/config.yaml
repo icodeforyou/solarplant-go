@@ -12,10 +12,6 @@ ferroamp:
   username: extapi
   password: SECRET
 
-tibber:
-  homeid: HOMEID
-  apitoken: SECRET
-
 weather_forecast:
   latitude: 59.0000
   longitude: 16.2000

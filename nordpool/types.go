@@ -1,13 +1,6 @@
 package nordpool
 
-import "time"
-
 const API_URL = "https://www.nordpoolgroup.com/api"
-
-type EnergyPrice struct {
-	Hour  time.Time
-	Price float64
-}
 
 type nordpool struct {
 	Data     data         `json:"data"`

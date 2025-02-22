@@ -7,39 +7,36 @@ import (
 
 	"github.com/angas/solarplant-go/database"
 	"github.com/angas/solarplant-go/hours"
-	"github.com/angas/solarplant-go/tibber"
+	"github.com/angas/solarplant-go/types"
 )
 
-func NewEnergyPriceTask(logger *slog.Logger, db *database.Database, tibber *tibber.Tibber) func() {
+func NewEnergyPriceTask(logger *slog.Logger, db *database.Database, fetcher types.EnergyPriceFetcher) func() {
 	if needImmediateEnergyPriceUpdate(db) {
 		logger.Info("need an immediate update of energy prices")
-		runTibberEnergyPriceTask(logger, db, tibber)
+		runEnergyPriceTask(logger, db, fetcher)
 	} else {
 		logger.Debug("no need for immediate update of energy prices")
 	}
 
-	return func() { runTibberEnergyPriceTask(logger, db, tibber) }
+	return func() { runEnergyPriceTask(logger, db, fetcher) }
 }
 
-func runTibberEnergyPriceTask(logger *slog.Logger, db *database.Database, tibber *tibber.Tibber) {
+func runEnergyPriceTask(logger *slog.Logger, db *database.Database, fetcher types.EnergyPriceFetcher) {
 	logger.Debug("running energy price task...")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	ep, err := tibber.GetEnergyPrices(ctx)
+	eps, err := fetcher.GetEnergyPrices(ctx)
 	if err != nil {
-		logger.Error("error fetching tibber energy prices", slog.Any("error", err))
-	} else {
-		var rows []database.EnergyPriceRow = make([]database.EnergyPriceRow, 0, len(ep))
-		for _, p := range ep {
-			hour := hours.DateHour{Date: p.StartsAt.Format("2006-01-02"), Hour: uint8(p.StartsAt.Hour())}
-			logger.Debug("energy price", "hour", slog.Any("hour", hour), slog.Float64("price", p.Energy), slog.Float64("tax", p.Tax))
-			rows = append(rows, database.EnergyPriceRow{
-				When:  hour,
-				Price: p.Energy,
-			})
-		}
-		db.SaveEnergyPrice(rows)
+		logger.Error("error fetching energy prices", slog.Any("error", err))
+		return
 	}
+
+	var rows []database.EnergyPriceRow = make([]database.EnergyPriceRow, 0, len(eps))
+	for _, ep := range eps {
+		logger.Debug("energy price", "hour", slog.Any("hour", ep.Hour), slog.Float64("price", ep.Price))
+		rows = append(rows, database.EnergyPriceRow{When: ep.Hour, Price: ep.Price})
+	}
+	db.SaveEnergyPrices(rows)
 }
 
 func needImmediateEnergyPriceUpdate(db *database.Database) bool {

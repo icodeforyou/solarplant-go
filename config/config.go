@@ -26,11 +26,6 @@ type AppConfigFerroamp struct {
 	Password string
 }
 
-type AppConfigTibber struct {
-	HomeId   string `mapstructure:"homeid"`
-	ApiToken string `mapstructure:"apitoken"`
-}
-
 type AppConfigWeatcherForecast struct {
 	Latitude  float64 // WGS84
 	Longitude float64 // WGS84
@@ -85,7 +80,6 @@ type AppConfig struct {
 	Api                      AppConfigApi
 	Database                 AppConfigDatabase
 	Ferroamp                 AppConfigFerroamp
-	Tibber                   AppConfigTibber
 	WeatherForecast          AppConfigWeatcherForecast `mapstructure:"weather_forecast"`
 	EnergyForecast           AppConfigEnergyForecast   `mapstructure:"energy_forecast"`
 	EnergyPrice              AppConfigEnergyPrice      `mapstructure:"energy_price"`

@@ -31,7 +31,7 @@ func (d *Database) SaveEnergyForecast(rows []EnergyForecastRow) {
 			convert.TwoDecimals(row.Production),
 			convert.TwoDecimals(row.Consumption),
 		)
-		panicOnError(err, "saving energy forecast")
+		panicOnError(err, "saving energy forecast") // TODO: Handle this error properly instead of panicking
 	}
 }
 

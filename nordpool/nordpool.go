@@ -1,6 +1,7 @@
 package nordpool
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,14 +10,26 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/angas/solarplant-go/hours"
+	"github.com/angas/solarplant-go/types"
 )
 
-func GetEnergyPrices(area string, page int16, currency string) ([]EnergyPrice, error) {
-	url := fmt.Sprintf("%s/marketdata/page/%d?currency=%s", API_URL, page, currency)
+type Nordpool struct {
+	area string
+	page int16
+}
+
+func New(area string) Nordpool {
+	return Nordpool{area: area}
+}
+
+func (n Nordpool) GetEnergyPrices(ctx context.Context) ([]types.EnergyPrice, error) {
+	url := fmt.Sprintf("%s/marketdata/page/%d?currency=SEK", API_URL, n.page)
 
 	slog.Default().Info("Fetching energy prices from Nordpool...", "url", url)
 
-	req, _ := http.NewRequest("GET", url, nil)
+	req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
 	client := http.Client{Timeout: 10 * time.Second}
 	res, err := client.Do(req)
 	if err != nil {
@@ -34,12 +47,16 @@ func GetEnergyPrices(area string, page int16, currency string) ([]EnergyPrice, e
 		return nil, fmt.Errorf("error unmarshaling NordPool json: %v", err)
 	}
 
-	result := make([]EnergyPrice, 0)
+	result := make([]types.EnergyPrice, 0)
 	for _, row := range nordpool.Data.Rows {
 		for _, column := range row.Columns {
-			if column.Name == area {
-				result = append(result, EnergyPrice{
-					Hour:  dateToTime(row.StartTime),
+			if column.Name == n.area {
+				t, err := time.Parse("2006-01-02T15:04:05", row.StartTime)
+				if err != nil {
+					return nil, fmt.Errorf("error parsing time: %v", err)
+				}
+				result = append(result, types.EnergyPrice{
+					Hour:  hours.FromTime(t),
 					Price: priceToFloat(column.Value),
 				})
 			}
@@ -57,12 +74,4 @@ func priceToFloat(str string) float64 {
 		return 0
 	}
 	return price / 1e3
-}
-
-func dateToTime(str string) time.Time {
-	date, err := time.Parse("2006-01-02T15:04:05", str)
-	if err != nil {
-		return time.Time{}
-	}
-	return date
 }

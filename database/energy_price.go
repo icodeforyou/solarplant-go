@@ -13,7 +13,7 @@ type EnergyPriceRow struct {
 	Price float64
 }
 
-func (d *Database) SaveEnergyPrice(rows []EnergyPriceRow) {
+func (d *Database) SaveEnergyPrices(rows []EnergyPriceRow) {
 	for _, row := range rows {
 		_, err := d.write.Exec(`
 			INSERT INTO energy_price (date, hour, price) VALUES (?, ?, ?)
@@ -21,7 +21,7 @@ func (d *Database) SaveEnergyPrice(rows []EnergyPriceRow) {
 			row.When.Date,
 			row.When.Hour,
 			convert.RoundFloat64(row.Price, 4))
-		panicOnError(err, "saving energy prices")
+		panicOnError(err, "saving energy prices") // TODO: Handle this error properly instead of panicking
 	}
 }
 

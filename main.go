@@ -10,10 +10,10 @@ import (
 
 	"github.com/angas/solarplant-go/config"
 	"github.com/angas/solarplant-go/database"
+	"github.com/angas/solarplant-go/elprisetjustnu"
 	"github.com/angas/solarplant-go/ferroamp"
 	"github.com/angas/solarplant-go/hours"
 	"github.com/angas/solarplant-go/task"
-	"github.com/angas/solarplant-go/tibber"
 	"github.com/angas/solarplant-go/www"
 	"github.com/lmittmann/tint"
 	"github.com/robfig/cron/v3"
@@ -37,8 +37,6 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
-
-	tibber := tibber.New(config.Tibber.ApiToken, config.Tibber.HomeId)
 
 	fa := ferroamp.New(
 		config.Ferroamp.Host,
@@ -65,7 +63,12 @@ func main() {
 	}
 	defer fa.Disconnect()
 
-	tasks := task.NewTasks(logger, db, tibber, faData, config)
+	tasks := task.NewTasks(
+		logger,
+		db,
+		elprisetjustnu.New(config.EnergyPrice.Area),
+		faData,
+		config)
 
 	cron := cron.New()
 	cron.AddFunc(config.WeatherForecast.RunAt, tasks.WeatherForecast)

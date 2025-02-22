@@ -22,7 +22,7 @@ func (d *Database) SavePanning(row PlanningRow) {
 		row.When.Hour,
 		row.Strategy,
 	)
-	panicOnError(err, "saving planning row")
+	panicOnError(err, "saving planning row") // TODO: Handle this error properly instead of panicking
 }
 
 func (d *Database) GetPlanningFrom(from hours.DateHour) ([]PlanningRow, error) {
