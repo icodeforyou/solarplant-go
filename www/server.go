@@ -84,6 +84,10 @@ func (s *Server) Run(ctx context.Context) {
 	ticker := time.NewTicker(time.Second * 2)
 	defer ticker.Stop()
 
+	// Keeping state to avoid spamming logs
+	fetchPanningErrorState := false
+	fetchEnergyPriceErrorState := false
+
 	for {
 		select {
 		case err := <-srvErrors:
@@ -101,17 +105,31 @@ func (s *Server) Run(ctx context.Context) {
 			return
 
 		case <-ticker.C:
-			// TODO: This is a hack to get the current hour's energy price,
+			hour := hours.FromNow()
+			// TODO: This is a hack to get the current hour's planning,
 			// it should be done in a more efficient way.
-			price, err := s.db.GetEnergyPriceForHour(hours.FromNow())
+			planning, err := s.db.GetPlanningForHour(hour)
 			if err != nil {
-				s.logger.Error("failed to get energy price", slog.Any("error", err))
-				price = database.EnergyPriceRow{}
-			}
-			planning, err := s.db.GetPlanningForHour(hours.FromNow())
-			if err != nil {
-				s.logger.Error("failed to get planning", slog.Any("error", err))
+				if !fetchPanningErrorState {
+					fetchPanningErrorState = true
+					s.logger.Warn("failed to get planning", slog.String("hour", hour.String()), slog.Any("error", err))
+				}
 				planning = database.PlanningRow{}
+			} else {
+				fetchPanningErrorState = false
+			}
+
+			// TODO: This is a hack to get the current hour's ,
+			// it should be done in a more efficient way.
+			price, err := s.db.GetEnergyPriceForHour(hour)
+			if err != nil {
+				if !fetchEnergyPriceErrorState {
+					fetchEnergyPriceErrorState = true
+					s.logger.Warn("failed to get energy price", slog.String("hour", hour.String()), slog.Any("error", err))
+				}
+				price = database.EnergyPriceRow{}
+			} else {
+				fetchEnergyPriceErrorState = false
 			}
 
 			data := RealTimeData{
@@ -120,7 +138,7 @@ func (s *Server) Run(ctx context.Context) {
 				BatteryPower: s.fa.BatteryPower(),
 				BatteryLevel: s.fa.BatteryLevel(),
 				EnergyPrice:  price.Price,
-				Strategy:     planning.Strategy,
+				Strategy:     planning.Strategy, // TODO: If we can't get current strategy we should probably show a default value.
 			}
 			buf, err := s.tm.Execute("real_time_data.html", data)
 			if err != nil {

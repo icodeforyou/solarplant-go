@@ -32,8 +32,7 @@ energy_price:
   tax_reduction: 0.6
   grid_benefit: 0.02
   area: SE3
-  currency: SEK
-  postal_code: 64191
+  currency: SEK  
   run_at: "2 */2 * * *"
 
 planner:

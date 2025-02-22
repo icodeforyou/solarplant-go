@@ -27,13 +27,14 @@ type BatteryRegulatorStrategy struct {
 }
 
 type BatteryRegulator struct {
-	logger          *slog.Logger
-	db              *database.Database
-	spec            config.AppConfigBatterySpec
-	faData          *ferroamp.FaInMemData
-	strategy        BatteryRegulatorStrategy
-	lastInstruction BatteryInstruction
-	C               chan BatteryInstruction
+	logger                *slog.Logger
+	db                    *database.Database
+	spec                  config.AppConfigBatterySpec
+	faData                *ferroamp.FaInMemData
+	strategy              BatteryRegulatorStrategy
+	usingFallbackStrategy bool
+	lastInstruction       BatteryInstruction
+	C                     chan BatteryInstruction
 }
 
 const (
@@ -57,23 +58,23 @@ func NewBatteryRegulator(
 	strategy BatteryRegulatorStrategy) *BatteryRegulator {
 
 	return &BatteryRegulator{
-		logger:          logger,
-		db:              db,
-		spec:            bs,
-		faData:          faData,
-		strategy:        strategy,
-		lastInstruction: BatteryInstruction{},
-		C:               make(chan BatteryInstruction),
+		logger:                logger,
+		db:                    db,
+		spec:                  bs,
+		faData:                faData,
+		strategy:              strategy,
+		usingFallbackStrategy: false, // Keeping state to avoid spamming logs
+		lastInstruction:       BatteryInstruction{},
+		C:                     make(chan BatteryInstruction),
 	}
 }
 
 func (br *BatteryRegulator) Run(ctx context.Context) {
 	br.logger.Info("starting battery regulator", slog.Any("interval", br.strategy.Interval))
-	ticker := time.NewTicker(br.strategy.Interval)
-
 	go func() {
 		br.logger.Debug("waiting for system to stabilize")
 		time.Sleep(time.Second * 60)
+		ticker := time.NewTicker(br.strategy.Interval)
 		for {
 			select {
 			case <-ctx.Done():
@@ -92,10 +93,27 @@ func (br *BatteryRegulator) adjustLoad() {
 	battPwr := br.faData.BatteryPower()
 	battStatus := br.faData.BatteryStatuses()
 
-	planning, err := br.db.GetPlanningForHour(hours.FromNow())
+	hour := hours.FromNow()
+	planning, err := br.db.GetPlanningForHour(hour)
 	if err != nil {
-		br.logger.Error("failed to get planning for hour", slog.Any("error", err))
-		return
+		planning = database.PlanningRow{
+			When:     hour,
+			Strategy: optimize.StrategyDefault.String(),
+		}
+		if !br.usingFallbackStrategy {
+			br.usingFallbackStrategy = true
+			br.logger.Warn("failed to get planning for hour, using a fallback strategy",
+				slog.String("hour", hour.String()),
+				slog.String("strategy", planning.Strategy),
+				slog.Any("error", err))
+		}
+	} else {
+		if br.usingFallbackStrategy {
+			br.usingFallbackStrategy = false
+			br.logger.Info("recovered from fallback strategy, got planning for this hour",
+				slog.String("hour", hour.String()),
+				slog.String("strategy", planning.Strategy))
+		}
 	}
 
 	sendAction := func(action BatteryAction, power float64) {

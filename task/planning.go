@@ -1,6 +1,7 @@
 package task
 
 import (
+	"database/sql"
 	"fmt"
 	"log/slog"
 
@@ -35,13 +36,21 @@ func NewPlanningTask(logger *slog.Logger, db *database.Database, cnfg *config.Ap
 
 			ef, err := db.GetEnergyForecast(hour)
 			if err != nil {
-				log.Error(fmt.Sprintf("error getting energy forecast for hour %s", hour), slog.Any("error", err))
+				if err == sql.ErrNoRows {
+					log.Warn("can't plan upcoming hours, no energy forecast found", slog.String("hour", hour.String()))
+				} else {
+					log.Error("error getting energy forecast", slog.String("hour", hour.String()), slog.Any("error", err))
+				}
 				return
 			}
 
 			ep, err := db.GetEnergyPriceForHour(hour)
 			if err != nil {
-				log.Error(fmt.Sprintf("error getting energy price for hour %s", hour), slog.Any("error", err))
+				if err == sql.ErrNoRows {
+					log.Warn("can't plan upcoming hours, no energy price found", slog.String("hour", hour.String()))
+				} else {
+					log.Error("error getting energy price", slog.String("hour", hour.String()), slog.Any("error", err))
+				}
 				return
 			}
 
