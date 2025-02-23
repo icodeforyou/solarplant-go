@@ -1,20 +1,24 @@
 package task
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/angas/solarplant-go/config"
 	"github.com/angas/solarplant-go/database"
 	"github.com/angas/solarplant-go/ferroamp"
 	"github.com/angas/solarplant-go/types"
+	"github.com/robfig/cron/v3"
 )
 
 type Tasks struct {
-	WeatherForecast func()
-	EnergyForecast  func()
-	EnergyPrice     func()
-	TimeSeries      func()
-	Planning        func()
+	cron                *cron.Cron
+	cnfg                *config.AppConfig
+	WeatherForecastTask func()
+	EnergyForecastTask  func()
+	EnergyPriceTask     func()
+	TimeSeriesTask      func()
+	PlanningTask        func()
 }
 
 func NewTasks(
@@ -25,10 +29,25 @@ func NewTasks(
 	cnfg *config.AppConfig,
 ) *Tasks {
 	return &Tasks{
-		WeatherForecast: NewWeatcherForcastTask(logger, db, cnfg.WeatherForecast),
-		EnergyForecast:  NewEnergyForecastTask(logger, db, cnfg.EnergyForecast),
-		EnergyPrice:     NewEnergyPriceTask(logger, db, epFetcher),
-		TimeSeries:      NewTimeSeriesTask(logger, db, faData),
-		Planning:        NewPlanningTask(logger, db, cnfg, faData),
+		cron:                cron.New(),
+		cnfg:                cnfg,
+		WeatherForecastTask: NewWeatcherForcastTask(logger, db, cnfg.WeatherForecast),
+		EnergyForecastTask:  NewEnergyForecastTask(logger, db, cnfg.EnergyForecast),
+		EnergyPriceTask:     NewEnergyPriceTask(logger, db, epFetcher),
+		TimeSeriesTask:      NewTimeSeriesTask(logger, db, faData),
+		PlanningTask:        NewPlanningTask(logger, db, cnfg, faData),
 	}
+}
+
+func (t *Tasks) Run() {
+	t.cron.AddFunc(t.cnfg.WeatherForecast.RunAt, t.WeatherForecastTask)
+	t.cron.AddFunc(t.cnfg.EnergyForecast.RunAt, t.EnergyForecastTask)
+	t.cron.AddFunc(t.cnfg.EnergyPrice.RunAt, t.EnergyPriceTask)
+	t.cron.AddFunc("@hourly", t.TimeSeriesTask)
+	t.cron.AddFunc(t.cnfg.Planner.RunAt, t.PlanningTask)
+	t.cron.Start()
+}
+
+func (t *Tasks) Stop() context.Context {
+	return t.cron.Stop()
 }

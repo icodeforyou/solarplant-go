@@ -49,11 +49,11 @@ func StartServer(logger *slog.Logger, config config.AppConfigApi, db *database.D
 	go s.hub.Run()
 
 	http.Handle("/", staticFilesHandler(config.WwwDir))
-	http.HandleFunc("/time_series", NewTimeSeriesHandler(s.config, s.db, s.tm, tasks.TimeSeries))
-	http.HandleFunc("/energy_price", NewEnergyPriceHandler(s.config, s.db, s.tm, tasks.EnergyPrice))
-	http.HandleFunc("/weather_forecast", NewWeatherForecastHandler(s.config, s.db, s.tm, tasks.WeatherForecast))
-	http.HandleFunc("/energy_forecast", NewEnergyForecastHandler(s.config, s.db, s.tm, tasks.EnergyForecast))
-	http.HandleFunc("/planning", NewPlanningHandler(s.config, s.db, s.tm, tasks.Planning))
+	http.HandleFunc("/time_series", NewTimeSeriesHandler(s.config, s.db, s.tm, tasks.TimeSeriesTask))
+	http.HandleFunc("/energy_price", NewEnergyPriceHandler(s.config, s.db, s.tm, tasks.EnergyPriceTask))
+	http.HandleFunc("/weather_forecast", NewWeatherForecastHandler(s.config, s.db, s.tm, tasks.WeatherForecastTask))
+	http.HandleFunc("/energy_forecast", NewEnergyForecastHandler(s.config, s.db, s.tm, tasks.EnergyForecastTask))
+	http.HandleFunc("/planning", NewPlanningHandler(s.config, s.db, s.tm, tasks.PlanningTask))
 	http.HandleFunc("/chart", NewChartHandler(s.db))
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		name := r.Header.Get("User-Agent")
