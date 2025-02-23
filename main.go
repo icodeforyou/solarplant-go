@@ -16,7 +16,6 @@ import (
 	"github.com/angas/solarplant-go/task"
 	"github.com/angas/solarplant-go/www"
 	"github.com/lmittmann/tint"
-	"github.com/robfig/cron/v3"
 )
 
 func main() {
@@ -69,15 +68,8 @@ func main() {
 		elprisetjustnu.New(config.EnergyPrice.Area),
 		faData,
 		config)
-
-	cron := cron.New()
-	cron.AddFunc(config.WeatherForecast.RunAt, tasks.WeatherForecast)
-	cron.AddFunc(config.EnergyForecast.RunAt, tasks.EnergyForecast)
-	cron.AddFunc(config.EnergyPrice.RunAt, tasks.EnergyPrice)
-	cron.AddFunc("@hourly", tasks.TimeSeries)
-	cron.AddFunc(config.Planner.RunAt, tasks.Planning)
-	cron.Start()
-	defer cron.Stop()
+	tasks.Run()
+	defer tasks.Stop()
 
 	regulatorStrategy := task.BatteryRegulatorStrategy{
 		Interval:        time.Second * 10,
