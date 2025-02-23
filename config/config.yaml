@@ -13,8 +13,8 @@ ferroamp:
   password: ${FERROAMP_PASSWORD}
 
 weather_forecast:
-  latitude: 59.0000
-  longitude: 16.2000
+  latitude: 56.8619418
+  longitude: 12.687893
   run_at: "0 */4 * * *"
 
 energy_forecast:
