@@ -26,7 +26,7 @@ energy_forecast:
 energy_price:
   tax_including_vat: 0.535
   tax_reduction: 0.6
-  grid_benefit: 0.02
+  grid_benefit: 0.05
   area: SE4
   currency: SEK  
   run_at: "2 */2 * * *"
