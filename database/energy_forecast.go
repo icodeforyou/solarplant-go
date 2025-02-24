@@ -100,21 +100,3 @@ func (d *Database) GetEnergyForecastFrom(dh hours.DateHour) ([]EnergyForecastRow
 
 	return forecasts, nil
 }
-
-func initEnergyForecast(db *sql.DB) {
-	_, err := db.Exec(`CREATE TABLE energy_forecast (
-		date CHAR(10) NOT NULL,
-		hour INTEGER NOT NULL,
-		production REAL NOT NULL,
-		consumption REAL NOT NULL,		
-		created INTEGER(4) NOT NULL DEFAULT (strftime('%s','now')),
-		updated INTEGER(4) NOT NULL DEFAULT (strftime('%s','now')),
-		CONSTRAINT energy_forecast_pk PRIMARY KEY (date, hour));
-
-		CREATE TRIGGER energy_forecast_updated AFTER UPDATE ON energy_forecast
-		BEGIN
-			UPDATE energy_forecast SET updated = (strftime('%s','now')) 
-			WHERE rowid = NEW.rowid;
-		END;`)
-	panicOnError(err, "creating energy_forecast table")
-}

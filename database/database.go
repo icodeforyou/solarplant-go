@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
-	"os"
 	"time"
 
 	sqlite "modernc.org/sqlite"
@@ -41,8 +40,6 @@ func New(ctx context.Context, path string) (*Database, error) {
 		return err
 	})
 
-	exist := exists(path)
-
 	read, err := sql.Open("sqlite", path)
 	if err != nil {
 		logger.Error("error when opening database (read)", slog.Any("error", err))
@@ -59,17 +56,8 @@ func New(ctx context.Context, path string) (*Database, error) {
 	write.SetMaxOpenConns(1) // only a single writer ever, no concurrency
 	write.SetConnMaxIdleTime(time.Minute)
 
-	if !exist {
-		logger.Info("database does not exist, creating tables")
-		initWeatcherForecast(write)
-		initEnergyPrice(write)
-		initTimeSeries(write)
-		initEnergyForecast(write)
-		initPlanning(write)
-		initFaSnapshot(write)
-	} else {
-		logger.Debug("database exists")
-	}
+	err = migrate(ctx, write)
+	panicOnError(err, "migrating")
 
 	return &Database{logger: logger, read: read, write: write}, nil
 }
@@ -83,17 +71,4 @@ func panicOnError(err error, action string) {
 	if err != nil {
 		panic(fmt.Errorf("database error when %s: %w", action, err))
 	}
-}
-
-func exists(path string) bool {
-	stat, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return false
-		} else {
-			panic(fmt.Errorf("error when looking for database : %w", err))
-		}
-	}
-
-	return !stat.IsDir()
 }

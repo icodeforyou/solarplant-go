@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"errors"
 	"log/slog"
 
@@ -74,23 +73,4 @@ func (d *Database) GetPlanningForHour(from hours.DateHour) (PlanningRow, error) 
 	}
 
 	return row, nil
-}
-
-func initPlanning(db *sql.DB) {
-	_, err := db.Exec(`
-	CREATE TABLE planning (
-		date CHAR(10) NOT NULL,
-		hour INTEGER NOT NULL,
-		strategy CHAR(16),
-		created INTEGER(4) NOT NULL DEFAULT (strftime('%s','now')),
-		updated INTEGER(4) NOT NULL DEFAULT (strftime('%s','now')),
-		CONSTRAINT planning_pk PRIMARY KEY (date, hour)
-	);
-
-	CREATE TRIGGER planning_updated AFTER	UPDATE ON planning 
-	BEGIN
-		UPDATE planning SET updated = (strftime('%s','now')) 
-		WHERE rowid = NEW.rowid;
-	END;`)
-	panicOnError(err, "creating planning table")
 }

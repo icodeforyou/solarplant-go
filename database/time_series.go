@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"log/slog"
 
-	_ "embed"
-
 	"github.com/angas/solarplant-go/convert"
 	"github.com/angas/solarplant-go/hours"
 )
@@ -195,25 +193,6 @@ func (d *Database) GetTimeSeriesWithEstimationsHour(from hours.DateHour) ([]Time
 	}
 
 	return ts, nil
-}
-
-func initTimeSeries(db *sql.DB) {
-	_, err := db.Exec(`
-		CREATE TABLE time_series (
-			date CHAR(10) NOT NULL,
-			hour INTEGER NOT NULL,
-			cloud_cover INTEGER NOT NULL,
-			temperature REAL NOT NULL,
-			precipitation REAL NOT NULL,
-			energy_price REAL NOT NULL,
-			consumption REAL NOT NULL,
-			production REAL NOT NULL,
-			production_lifetime REAL NOT NULL,
-			battery_level REAL NOT NULL,
-			battery_net_load REAL NOT NULL,
-			CONSTRAINT time_series_pk PRIMARY KEY (date, hour)
-		)`)
-	panicOnError(err, "creating time_series table")
 }
 
 func scanTimeSeriesHours(rows *sql.Rows) ([]TimeSeriesRow, error) {

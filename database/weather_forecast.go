@@ -1,7 +1,6 @@
 package database
 
 import (
-	"database/sql"
 	"log/slog"
 
 	"github.com/angas/solarplant-go/convert"
@@ -97,25 +96,4 @@ func (d *Database) GetWeatherForecastFrom(dh hours.DateHour) ([]WeatherForecastR
 	}
 
 	return forecasts, nil
-}
-
-func initWeatcherForecast(db *sql.DB) {
-	_, err := db.Exec(`
-		CREATE TABLE weather_forecast (
-			date CHAR(10) NOT NULL,
-			hour INTEGER NOT NULL,
-			cloud_cover INTEGER NOT NULL,
-			temperature REAL NOT NULL,
-			precipitation REAL NOT NULL,
-			created INTEGER(4) NOT NULL DEFAULT (strftime('%s','now')),
-			updated INTEGER(4) NOT NULL DEFAULT (strftime('%s','now')),
-			CONSTRAINT weather_forecast_pk PRIMARY KEY (date, hour)
-		);
-
-		CREATE TRIGGER weather_forecast_updated AFTER UPDATE ON weather_forecast
-		BEGIN
-			UPDATE weather_forecast SET updated = (strftime('%s','now')) 
-			WHERE rowid = NEW.rowid;
-		END;`)
-	panicOnError(err, "creating weather forecast table")
 }
