@@ -2,10 +2,8 @@ package config
 
 import (
 	"fmt"
-	"log/slog"
 	"strings"
 
-	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -91,54 +89,20 @@ type AppConfig struct {
 }
 
 func Load() (config *AppConfig) {
-	if err := godotenv.Load(); err != nil {
-		logger := slog.Default()
-		logger.Warn("Error loading .env file", slog.String("error", err.Error()))
-	}
-
-	viper.AutomaticEnv()
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-	viper.AllowEmptyEnv(true)
-	viper.SetEnvPrefix("")
-
-	// Läs config filen som text först
 	viper.AddConfigPath("config")
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
+	viper.AutomaticEnv()
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	var c AppConfig
 
 	if err := viper.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("unable to read config file: %w", err))
 	}
 
-	// Hämta värdena direkt från environment eller använd default
-	batterySpec := AppConfigBatterySpec{
-		Capacity:         viper.GetFloat64("battery_spec.capacity"),
-		MinLevel:         viper.GetFloat64("battery_spec.min_level"),
-		MaxLevel:         viper.GetFloat64("battery_spec.max_level"),
-		MaxChargeRate:    viper.GetFloat64("battery_spec.max_charge_rate"),
-		MaxDischargeRate: viper.GetFloat64("battery_spec.max_discharge_rate"),
-		DegradationCost:  viper.GetFloat64("battery_spec.degradation_cost"),
-	}
-
-	ferroampConfig := AppConfigFerroamp{
-		Host:     viper.GetString("ferroamp.host"),
-		Password: viper.GetString("ferroamp.password"),
-	}
-
-	// Sätt värdena tillbaka i Viper
-	viper.Set("battery_spec.capacity", batterySpec.Capacity)
-	viper.Set("battery_spec.min_level", batterySpec.MinLevel)
-	viper.Set("battery_spec.max_level", batterySpec.MaxLevel)
-	viper.Set("battery_spec.max_charge_rate", batterySpec.MaxChargeRate)
-	viper.Set("battery_spec.max_discharge_rate", batterySpec.MaxDischargeRate)
-	viper.Set("battery_spec.degradation_cost", batterySpec.DegradationCost)
-
-	viper.Set("ferroamp.host", ferroampConfig.Host)
-	viper.Set("ferroamp.password", ferroampConfig.Password)
-
-	var c AppConfig
 	if err := viper.Unmarshal(&c); err != nil {
-		panic(fmt.Errorf("unable to unmarshal config file: %w", err))
+		panic(fmt.Errorf("unable to unmarchal config file: %w", err))
 	}
 
 	return &c
