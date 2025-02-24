@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"log/slog"
 
-	_ "embed"
-
 	"github.com/angas/solarplant-go/convert"
 	"github.com/angas/solarplant-go/hours"
 )
