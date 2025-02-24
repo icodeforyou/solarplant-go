@@ -2,9 +2,9 @@ api:
   address: "0.0.0.0"
   port: 8080
   www_dir: "./www"
-  session_key: "sjd2¤%sasdadh&/(G&/(G%&KLJN))234"
-  admin_user: "admin"
-  admin_password: "kattaskit"
+  session_key: ${API_SESSION_KEY}
+  admin_user: ${API_ADMIN_USER}
+  admin_password: ${API_ADMIN_PASSWORD}
 
 database:
   path: ./data/solarplant.db
@@ -16,8 +16,8 @@ ferroamp:
   password: ${FERROAMP_PASSWORD}
 
 weather_forecast:
-  latitude: 56.8619418
-  longitude: 12.687893
+  latitude: ${WEATHER_FORECAST_LATITUDE}
+  longitude: ${WEATHER_FORECAST_LONGITUDE}
   run_at: "0 */4 * * *"
 
 energy_forecast:
@@ -40,12 +40,12 @@ planner:
   grid_max_power: 25
 
 battery_spec:
-  capacity: 14.2
-  min_level: 10
-  max_level: 100
-  max_charge_rate: 7
-  max_discharge_rate: 7
-  degradation_cost: 0.1
+  capacity: ${BATTERY_SPEC_CAPACITY}
+  min_level: ${BATTERY_SPEC_MIN_LEVEL}
+  max_level: ${BATTERY_SPEC_MAX_LEVEL}
+  max_charge_rate: ${BATTERY_SPEC_MAX_CHARGE_RATE}
+  max_discharge_rate: ${BATTERY_SPEC_MAX_DISCHARGE_RATE}
+  degradation_cost: ${BATTERY_SPEC_DEGRADATION_COST}
 
 battery_regulator_strategy:
   interval: 10
