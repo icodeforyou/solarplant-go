@@ -42,6 +42,13 @@ func StartServer(logger *slog.Logger, config config.AppConfigApi, db *database.D
 
 	// Create a secure cookie store with a random key
 	store := sessions.NewCookieStore([]byte(config.SessionKey))
+	store.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   86400 * 7, // 7 days
+		HttpOnly: true,
+		Secure:   false, // Allow cookies over HTTP
+		SameSite: http.SameSiteLaxMode,
+	}
 
 	s := &Server{
 		logger: logger,
@@ -108,6 +115,9 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	username := r.FormValue("username")
 	password := r.FormValue("password")
+
+	s.logger.Info("login", "username", username, "password", password)
+	s.logger.Info("admin user", "username", s.config.AdminUser, "password", s.config.AdminPassword)
 
 	// Kontrollera mot konfigurerade användaruppgifter
 	if username == s.config.AdminUser && password == s.config.AdminPassword {
