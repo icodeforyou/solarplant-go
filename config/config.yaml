@@ -2,6 +2,9 @@ api:
   address: "0.0.0.0"
   port: 8080
   www_dir: "./www"
+  session_key: "sjd2¤%sasdadh&/(G&/(G%&KLJN))234"
+  admin_user: "admin"
+  admin_password: "kattaskit"
 
 database:
   path: ./data/solarplant.db
@@ -47,4 +50,6 @@ battery_spec:
 battery_regulator_strategy:
   interval: 10
   update_threshold: 250
+
+
 

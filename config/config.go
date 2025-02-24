@@ -14,7 +14,10 @@ type AppConfigApi struct {
 	// If assigned, the server will serve files from the directory,
 	// that must contain a "static" and "templates" directory.
 	// This is useful for development.
-	WwwDir *string `mapstructure:"www_dir"`
+	WwwDir        *string `mapstructure:"www_dir"`
+	SessionKey    string  `mapstructure:"session_key"`
+	AdminUser     string  `mapstructure:"admin_user"`
+	AdminPassword string  `mapstructure:"admin_password"`
 }
 
 type AppConfigDatabase struct{ Path string }

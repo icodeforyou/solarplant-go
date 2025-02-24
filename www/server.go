@@ -12,6 +12,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/gorilla/sessions"
+
 	"github.com/angas/solarplant-go/config"
 	"github.com/angas/solarplant-go/database"
 	"github.com/angas/solarplant-go/ferroamp"
@@ -26,6 +28,7 @@ type Server struct {
 	fa     *ferroamp.FaInMemData
 	hub    *Hub
 	tm     *TemplateManager
+	store  *sessions.CookieStore
 }
 
 //go:embed static
@@ -37,6 +40,9 @@ func StartServer(logger *slog.Logger, config config.AppConfigApi, db *database.D
 		logger.Error("template manager failed", slog.Any("error", err))
 	}
 
+	// Create a secure cookie store with a random key
+	store := sessions.NewCookieStore([]byte(config.SessionKey))
+
 	s := &Server{
 		logger: logger,
 		config: config,
@@ -44,18 +50,21 @@ func StartServer(logger *slog.Logger, config config.AppConfigApi, db *database.D
 		fa:     fa,
 		hub:    NewHub(logger),
 		tm:     tm,
+		store:  store,
 	}
 
 	go s.hub.Run()
 
-	http.Handle("/", staticFilesHandler(config.WwwDir))
-	http.HandleFunc("/time_series", NewTimeSeriesHandler(s.config, s.db, s.tm, tasks.TimeSeries))
-	http.HandleFunc("/energy_price", NewEnergyPriceHandler(s.config, s.db, s.tm, tasks.EnergyPrice))
-	http.HandleFunc("/weather_forecast", NewWeatherForecastHandler(s.config, s.db, s.tm, tasks.WeatherForecast))
-	http.HandleFunc("/energy_forecast", NewEnergyForecastHandler(s.config, s.db, s.tm, tasks.EnergyForecast))
-	http.HandleFunc("/planning", NewPlanningHandler(s.config, s.db, s.tm, tasks.Planning))
-	http.HandleFunc("/chart", NewChartHandler(s.db))
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/login", s.handleLogin)
+	http.HandleFunc("/logout", s.handleLogout)
+	http.Handle("/", s.authMiddleware(staticFilesHandler(config.WwwDir)))
+	http.Handle("/time_series", s.authMiddleware(http.HandlerFunc(NewTimeSeriesHandler(s.config, s.db, s.tm, tasks.TimeSeries))))
+	http.Handle("/energy_price", s.authMiddleware(NewEnergyPriceHandler(s.config, s.db, s.tm, tasks.EnergyPrice)))
+	http.Handle("/weather_forecast", s.authMiddleware(NewWeatherForecastHandler(s.config, s.db, s.tm, tasks.WeatherForecast)))
+	http.Handle("/energy_forecast", s.authMiddleware(NewEnergyForecastHandler(s.config, s.db, s.tm, tasks.EnergyForecast)))
+	http.Handle("/planning", s.authMiddleware(NewPlanningHandler(s.config, s.db, s.tm, tasks.Planning)))
+	http.Handle("/chart", s.authMiddleware(NewChartHandler(s.db)))
+	http.Handle("/ws", s.authMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		name := r.Header.Get("User-Agent")
 		client, err := NewClient(s.hub, w, r, name)
 		if err != nil {
@@ -64,9 +73,66 @@ func StartServer(logger *slog.Logger, config config.AppConfigApi, db *database.D
 		}
 		s.hub.Register <- client
 		go client.WritePump()
-	})
+	})))
 
 	return s
+}
+
+func (s *Server) authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Skippa auth för login-sidan
+		if r.URL.Path == "/login" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		session, _ := s.store.Get(r, "session-name")
+		if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		buf, err := s.tm.Execute("login.html", nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(buf.Bytes())
+		return
+	}
+
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	// Kontrollera mot konfigurerade användaruppgifter
+	if username == s.config.AdminUser && password == s.config.AdminPassword {
+		session, _ := s.store.Get(r, "session-name")
+		session.Values["authenticated"] = true
+		session.Save(r, w)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	buf, err := s.tm.Execute("login.html", map[string]interface{}{
+		"Error": "Felaktigt användarnamn eller lösenord",
+	})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(buf.Bytes())
+}
+
+func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
+	session, _ := s.store.Get(r, "session-name")
+	session.Values["authenticated"] = false
+	session.Save(r, w)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (s *Server) Run(ctx context.Context) {
