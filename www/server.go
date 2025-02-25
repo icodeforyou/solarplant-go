@@ -117,9 +117,6 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 
-	s.logger.Info("login", "username", username, "password", password)
-	s.logger.Info("admin user", "username", s.config.AdminUser, "password", s.config.AdminPassword)
-
 	// Kontrollera mot konfigurerade användaruppgifter
 	if username == s.config.AdminUser && password == s.config.AdminPassword {
 		session, _ := s.store.Get(r, "session-name")
