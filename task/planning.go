@@ -85,7 +85,8 @@ func NewPlanningTask(logger *slog.Logger, db *database.Database, cnfg *config.Ap
 			})
 		}
 
-		log.Debug("planning finished",
+		logger.Info("planning task done",
+			slog.Int("noOfHoursUpdated", cnfg.Planner.HoursAhead),
 			slog.Float64("cost", optOutput.Cost),
 			slog.Float64("battLvl", optOutput.BatteryLevel))
 	}

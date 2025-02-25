@@ -1,7 +1,7 @@
 api:
   address: localhost
   port: 8080
-  www_dir: ./www_ext
+  #www_dir: ./www_ext
 
 database:
   path: ./data/solarplant.db
@@ -47,4 +47,10 @@ battery_spec:
 battery_regulator_strategy:
   interval: 10
   update_threshold: 250
+
+logging:
+  db_level: DEBUG
+  db_attrs_format: JSON
+  db_max_entries: 10000
+  console_level: DEBUG
 

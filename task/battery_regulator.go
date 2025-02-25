@@ -70,7 +70,7 @@ func NewBatteryRegulator(
 }
 
 func (br *BatteryRegulator) Run(ctx context.Context) {
-	br.logger.Info("starting battery regulator", slog.Any("interval", br.strategy.Interval))
+	br.logger.Debug("starting battery regulator", slog.Any("interval", br.strategy.Interval))
 	go func() {
 		br.logger.Debug("waiting for system to stabilize")
 		time.Sleep(time.Second * 60)

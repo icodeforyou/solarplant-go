@@ -32,6 +32,8 @@ func runForcastTask(logger *slog.Logger, db *database.Database, config config.Ap
 	} else {
 		db.SaveForcast(slice.Map(fc, toWeatherForecastRow))
 	}
+
+	logger.Info("weather forecast task done", slog.Int("noOfHoursUpdated", len(fc)))
 }
 
 func needImmediateForcastUpdate(db *database.Database) bool {

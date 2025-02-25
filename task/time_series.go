@@ -54,7 +54,7 @@ func NewTimeSeriesTask(logger *slog.Logger, db *database.Database, faInMem *ferr
 			BatteryNetLoad:     faInMem.BatteryNetLoadSinceSnapshot(),
 		})
 
-		logger.Debug("time series stored",
+		logger.Info("time series task done",
 			slog.Float64("productionLastHour", faInMem.ProducedSinceSnapshot()),
 			slog.Float64("consumtionLastHour", faInMem.ConsumedSinceSnapshot()),
 			slog.Float64("productionLifetime", faInMem.ProductionLifetime()))

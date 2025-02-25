@@ -69,6 +69,9 @@
       <button class="outline" hx-get="/planning" hx-target="#data" hx-on::after-request="setActive(this)">
         Planning
       </button>
+      <button class="outline" hx-get="/log" hx-target="#data" hx-on::after-request="setActive(this)">
+        Log
+      </button>
     </div>
     <div id="data" style="margin-top: 10px;"></div>
   </main>

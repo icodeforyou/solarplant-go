@@ -1,0 +1,7 @@
+CREATE TABLE log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  timestamp TEXT NOT NULL,
+  level INTEGER NOT NULL,
+  message TEXT NOT NULL,
+  attrs TEXT
+);

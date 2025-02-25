@@ -54,6 +54,7 @@ func StartServer(logger *slog.Logger, config config.AppConfigApi, db *database.D
 	http.HandleFunc("/weather_forecast", NewWeatherForecastHandler(s.config, s.db, s.tm, tasks.WeatherForecastTask))
 	http.HandleFunc("/energy_forecast", NewEnergyForecastHandler(s.config, s.db, s.tm, tasks.EnergyForecastTask))
 	http.HandleFunc("/planning", NewPlanningHandler(s.config, s.db, s.tm, tasks.PlanningTask))
+	http.HandleFunc("/log", NewLogHandler(s.config, s.db, s.tm))
 	http.HandleFunc("/chart", NewChartHandler(s.db))
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		name := r.Header.Get("User-Agent")
