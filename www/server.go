@@ -70,6 +70,7 @@ func StartServer(logger *slog.Logger, config config.AppConfigApi, db *database.D
 	http.Handle("/weather_forecast", s.authMiddleware(NewWeatherForecastHandler(s.config, s.db, s.tm, tasks.WeatherForecastTask)))
 	http.Handle("/energy_forecast", s.authMiddleware(NewEnergyForecastHandler(s.config, s.db, s.tm, tasks.EnergyForecastTask)))
 	http.Handle("/planning", s.authMiddleware(NewPlanningHandler(s.config, s.db, s.tm, tasks.PlanningTask)))
+	http.Handle("/log", s.authMiddleware(NewLogHandler(s.config, s.db, s.tm)))
 	http.Handle("/chart", s.authMiddleware(NewChartHandler(s.db)))
 	http.Handle("/ws", s.authMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		name := r.Header.Get("User-Agent")

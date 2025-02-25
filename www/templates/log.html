@@ -1,0 +1,12 @@
+<table hx-indicator=".htmx-bars">
+  <thead>
+    <tr>
+      <th>Timestamp (UTC)</th>
+      <th>Level</th>
+      <th>Message</th>
+      <th>Attributes</th>
+    </tr>
+  </thead>
+  <tbody hx-get="/log?page=1&pageSize=25" hx-trigger="revealed" hx-swap="innerHTML">
+  </tbody>
+</table>

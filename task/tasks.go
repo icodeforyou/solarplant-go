@@ -19,6 +19,7 @@ type Tasks struct {
 	EnergyPriceTask     func()
 	TimeSeriesTask      func()
 	PlanningTask        func()
+	MaintenanceTask     func()
 }
 
 func NewTasks(
@@ -36,6 +37,7 @@ func NewTasks(
 		EnergyPriceTask:     NewEnergyPriceTask(logger, db, epFetcher),
 		TimeSeriesTask:      NewTimeSeriesTask(logger, db, faData),
 		PlanningTask:        NewPlanningTask(logger, db, cnfg, faData),
+		MaintenanceTask:     NewMaintenanceTask(logger, db, cnfg),
 	}
 }
 
@@ -45,6 +47,7 @@ func (t *Tasks) Run() {
 	t.cron.AddFunc(t.cnfg.EnergyPrice.RunAt, t.EnergyPriceTask)
 	t.cron.AddFunc("@hourly", t.TimeSeriesTask)
 	t.cron.AddFunc(t.cnfg.Planner.RunAt, t.PlanningTask)
+	t.cron.AddFunc("30 2 * * *", t.MaintenanceTask)
 	t.cron.Start()
 }
 

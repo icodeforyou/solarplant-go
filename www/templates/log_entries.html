@@ -1,0 +1,22 @@
+{{ range $index, $entry := .Entries }}
+{{ if eq $index (Subtract (len $.Entries) 1) }}
+<tr hx-get="/log?page={{ $.Page }}&pageSize={{ $.PageSize }}" hx-trigger="intersect once" hx-swap="afterend">
+  {{ else }}
+<tr>
+  {{ end }}
+  <td style="white-space: nowrap">{{ $entry.Timestamp.Format "2006-01-02 15:04:05" }}</td>
+  {{ if eq $entry.Level 8 }}
+  <td style="color: red;">ERROR</td>
+  {{ else if eq $entry.Level 4 }}
+  <td style="color: orange;">WARN</td>
+  {{ else if eq $entry.Level 0 }}
+  <td style="color: green;">INFO</td>
+  {{ else if eq $entry.Level -4 }}
+  <td style="color: gray;">DEBUG</td>
+  {{ else }}
+  <td></td>
+  {{ end }}
+  <td>{{ $entry.Message }}</td>
+  <td>{{ $entry.Attrs }}</td>
+</tr>
+{{ end }}

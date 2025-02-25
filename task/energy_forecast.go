@@ -62,6 +62,8 @@ func runEnergyForecastTask(logger *slog.Logger, db *database.Database, config co
 	}
 
 	db.SaveEnergyForecast(rows)
+
+	logger.Debug("energy forecast task done", slog.Int("noOfHoursUpdated", len(rows)))
 }
 
 func calcHistoryAverage(db *database.Database, config config.AppConfigEnergyForecast, hour hours.DateHour) (historyAverage, error) {

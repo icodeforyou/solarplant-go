@@ -54,6 +54,7 @@ var funcMap = template.FuncMap{
 		}
 		return "-"
 	},
+	"Subtract": func(a, b int) int { return a - b },
 }
 
 func NewTemplateManager(extDir *string) (*TemplateManager, error) {

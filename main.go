@@ -13,6 +13,7 @@ import (
 	"github.com/angas/solarplant-go/elprisetjustnu"
 	"github.com/angas/solarplant-go/ferroamp"
 	"github.com/angas/solarplant-go/hours"
+	"github.com/angas/solarplant-go/logging"
 	"github.com/angas/solarplant-go/task"
 	"github.com/angas/solarplant-go/www"
 	"github.com/lmittmann/tint"
@@ -21,21 +22,24 @@ import (
 func main() {
 	config := config.Load()
 
-	logHandler := tint.NewHandler(os.Stdout, &tint.Options{
-		Level:      slog.LevelDebug,
-		TimeFormat: time.RFC3339,
-	})
-	logger := slog.New(logHandler)
-	slog.SetDefault(slog.New(logHandler))
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	db, err := database.New(ctx, config.Database.Path)
+	consolHandler := tint.NewHandler(os.Stdout, &tint.Options{
+		Level:      config.Logging.GetConsoleLevel(),
+		TimeFormat: time.RFC3339,
+	})
+
+	db, err := database.New(ctx, slog.New(consolHandler), config.Database.Path)
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
+
+	dbHandler := logging.NewSQLiteHandler(db, config.Logging.GetDbLevel(), config.Logging.GetDbAttrsFormat())
+	logger := slog.New(logging.NewMultiHandler(consolHandler, dbHandler))
+	slog.SetDefault(logger)
+	db.SetLogger(slog.Default())
 
 	fa := ferroamp.New(
 		config.Ferroamp.Host,
@@ -133,6 +137,6 @@ func newFaInMemData(logger *slog.Logger, db *database.Database) *ferroamp.FaInMe
 		return ferroamp.NewFaInMemData(nil)
 	}
 
-	logger.Info("restoring snapshot", slog.String("hour", snapshot.When.String()))
+	logger.Debug("restoring snapshot", slog.String("hour", snapshot.When.String()))
 	return ferroamp.NewFaInMemData(&snapshot.Data)
 }

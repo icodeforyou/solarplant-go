@@ -37,6 +37,8 @@ func runEnergyPriceTask(logger *slog.Logger, db *database.Database, fetcher type
 		rows = append(rows, database.EnergyPriceRow{When: ep.Hour, Price: ep.Price})
 	}
 	db.SaveEnergyPrices(rows)
+
+	logger.Info("energy price task done", slog.Int("noOfHoursUpdated", len(rows)))
 }
 
 func needImmediateEnergyPriceUpdate(db *database.Database) bool {

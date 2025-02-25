@@ -1,6 +1,8 @@
 package optimize
 
-import "github.com/angas/solarplant-go/config"
+import (
+	"github.com/angas/solarplant-go/config"
+)
 
 type Battery struct {
 	config.AppConfigBatterySpec

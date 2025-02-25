@@ -32,9 +32,7 @@ const initSQL = `
  * New creates a new database connection.
  * Inspired by: https://theitsolutions.io/blog/modernc.org-sqlite-with-go
  */
-func New(ctx context.Context, path string) (*Database, error) {
-	logger := slog.Default()
-
+func New(ctx context.Context, logger *slog.Logger, path string) (*Database, error) {
 	sqlite.RegisterConnectionHook(func(conn sqlite.ExecQuerierContext, _ string) error {
 		_, err := conn.ExecContext(ctx, initSQL, nil)
 		return err
@@ -60,6 +58,10 @@ func New(ctx context.Context, path string) (*Database, error) {
 	panicOnError(err, "migrating")
 
 	return &Database{logger: logger, read: read, write: write}, nil
+}
+
+func (d *Database) SetLogger(logger *slog.Logger) {
+	d.logger = logger
 }
 
 func (d *Database) Close() {
