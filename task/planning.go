@@ -61,7 +61,7 @@ func NewPlanningTask(logger *slog.Logger, db *database.Database, cnfg *config.Ap
 		}
 
 		log.Debug(fmt.Sprintf("planning for %d hours ahead", cnfg.Planner.HoursAhead),
-			slog.Any("hour", startHour),
+			slog.String("hour", startHour.String()),
 			slog.Float64("battLvl", optInput.Battery.CurrentLevel))
 
 		optOutput := optimize.BestStrategies(optInput)

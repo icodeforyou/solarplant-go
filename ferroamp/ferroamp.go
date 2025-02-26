@@ -266,7 +266,7 @@ func (fa *Ferroamp) startPurgeRoutine() {
 				}()
 
 			case <-fa.stopPurgeCh:
-				fa.logger.Info("stopping purge routine")
+				fa.logger.Debug("stopping purge routine")
 				return
 			}
 		}

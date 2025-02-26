@@ -33,7 +33,7 @@ func runEnergyPriceTask(logger *slog.Logger, db *database.Database, fetcher type
 
 	var rows []database.EnergyPriceRow = make([]database.EnergyPriceRow, 0, len(eps))
 	for _, ep := range eps {
-		logger.Debug("energy price", "hour", slog.Any("hour", ep.Hour), slog.Float64("price", ep.Price))
+		logger.Debug("energy price", slog.String("hour", ep.Hour.String()), slog.Float64("price", ep.Price))
 		rows = append(rows, database.EnergyPriceRow{When: ep.Hour, Price: ep.Price})
 	}
 	db.SaveEnergyPrices(rows)
