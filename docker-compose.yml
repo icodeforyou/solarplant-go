@@ -1,0 +1,10 @@
+services:
+  solarplant:
+    image: solarplant:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data/:/app/data/
+      - ./config/:/app/config/
+    restart: always
+    env_file: ".env"

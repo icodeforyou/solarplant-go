@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+        .login-container {
+            max-width: 50%;
+            margin: 100px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .error {
+            color: red;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <main class="container-fluid"></main>
+        <div class="login-container">
+            <h2>Login</h2>
+            {{if .Error}}
+            <div class="error">{{.Error}}</div>
+            {{end}}
+            <form method="POST" action="/login">
+                <div>
+                    <label>Username:</label><br>
+                    <input type="text" name="username" required>
+                </div>
+                <div>
+                    <label>Password:</label><br>
+                    <input type="password" name="password" required>
+                </div>
+                <div style="margin-top: 10px;">
+                    <button type="submit">Send</button>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html>
