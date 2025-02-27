@@ -62,6 +62,7 @@ func StartServer(logger *slog.Logger, config config.AppConfigApi, db *database.D
 
 	go s.hub.Run()
 
+
 	http.HandleFunc("/login", s.handleLogin)
 	http.HandleFunc("/logout", s.handleLogout)
 	http.Handle("/", s.authMiddleware(staticFilesHandler(config.WwwDir)))
