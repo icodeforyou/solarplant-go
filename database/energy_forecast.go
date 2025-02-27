@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 
@@ -99,4 +100,8 @@ func (d *Database) GetEnergyForecastFrom(dh hours.DateHour) ([]EnergyForecastRow
 	}
 
 	return forecasts, nil
+}
+
+func (d *Database) PurgeEnergyForecast(ctx context.Context) error {
+	return d.purge(ctx, "energy_forecast")
 }

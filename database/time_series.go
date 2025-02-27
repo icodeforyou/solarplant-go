@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 
@@ -219,4 +220,8 @@ func scanTimeSeriesHours(rows *sql.Rows) ([]TimeSeriesRow, error) {
 	}
 
 	return ts, nil
+}
+
+func (d *Database) PurgeTimeSeries(ctx context.Context) error {
+	return d.purge(ctx, "time_series")
 }

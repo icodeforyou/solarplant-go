@@ -19,7 +19,17 @@ type AppConfigApi struct {
 	WwwDir *string `mapstructure:"www_dir"`
 }
 
-type AppConfigDatabase struct{ Path string }
+type AppConfigDatabase struct {
+	Path          string
+	RetentionDays *uint `mapstructure:"retention_days"`
+}
+
+func (d AppConfigDatabase) GetRetentionDays() uint {
+	if d.RetentionDays == nil {
+		return 90
+	}
+	return *d.RetentionDays
+}
 
 type AppConfigFerroamp struct {
 	Host     string

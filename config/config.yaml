@@ -5,6 +5,7 @@ api:
 
 database:
   path: ./data/solarplant.db
+  retention_days: 90
 
 ferroamp:
   host: ferroamp.internal

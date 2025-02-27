@@ -29,7 +29,7 @@ func main() {
 		TimeFormat: time.RFC3339,
 	})
 
-	db, err := database.New(ctx, slog.New(consolHandler), config.Database.Path)
+	db, err := database.New(ctx, slog.New(consolHandler), config.Database.Path, config.Database.GetRetentionDays())
 	if err != nil {
 		panic(err)
 	}

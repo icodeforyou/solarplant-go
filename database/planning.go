@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 
@@ -73,4 +74,8 @@ func (d *Database) GetPlanningForHour(from hours.DateHour) (PlanningRow, error) 
 	}
 
 	return row, nil
+}
+
+func (d *Database) PurgePlanning(ctx context.Context) error {
+	return d.purge(ctx, "planning")
 }

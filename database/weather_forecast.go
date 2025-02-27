@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/angas/solarplant-go/convert"
@@ -96,4 +97,8 @@ func (d *Database) GetWeatherForecastFrom(dh hours.DateHour) ([]WeatherForecastR
 	}
 
 	return forecasts, nil
+}
+
+func (d *Database) PurgeWeatherForecast(ctx context.Context) error {
+	return d.purge(ctx, "weather_forecast")
 }

@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/angas/solarplant-go/convert"
@@ -68,4 +69,8 @@ func (d *Database) GetEnergyPriceFrom(dh hours.DateHour) ([]EnergyPriceRow, erro
 	}
 
 	return energyPrices, nil
+}
+
+func (d *Database) PurgeEnergyPrice(ctx context.Context) error {
+	return d.purge(ctx, "energy_price")
 }

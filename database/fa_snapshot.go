@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log/slog"
@@ -58,4 +59,8 @@ func (d *Database) GetFaSnapshotForHour(from hours.DateHour) (FaSnapshotRow, err
 	}
 
 	return fs, nil
+}
+
+func (d *Database) PurgeFaSnapshot(ctx context.Context) error {
+	return d.purge(ctx, "fa_snapshot")
 }
