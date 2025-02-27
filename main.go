@@ -12,7 +12,6 @@ import (
 	"github.com/angas/solarplant-go/database"
 	"github.com/angas/solarplant-go/elprisetjustnu"
 	"github.com/angas/solarplant-go/ferroamp"
-	"github.com/angas/solarplant-go/hours"
 	"github.com/angas/solarplant-go/logging"
 	"github.com/angas/solarplant-go/task"
 	"github.com/angas/solarplant-go/www"
@@ -116,27 +115,4 @@ func main() {
 
 	server := www.StartServer(logger, config.Api, db, tasks, faData)
 	server.Run(ctx)
-}
-
-/** Restore Ferroamp data from last hour snapshot or start from scratch */
-func newFaInMemData(logger *slog.Logger, db *database.Database) *ferroamp.FaInMemData {
-	now := time.Now().UTC()
-	if now.Minute() == 59 && now.Second() > 58 {
-		logger.Info("too close to the next snapshot, waiting for the next hour")
-		time.Sleep(time.Second * 5)
-	}
-	from := hours.FromNow().Sub(1)
-	snapshot, err := db.GetFaSnapshotForHour(from)
-	if err != nil {
-		logger.Error("failed to get snapshot", slog.Any("error", err), slog.String("hour", from.String()))
-		return ferroamp.NewFaInMemData(nil)
-	}
-
-	if snapshot.IsZero() {
-		logger.Info("no snapshot found, starting from scratch", slog.String("hour", from.String()))
-		return ferroamp.NewFaInMemData(nil)
-	}
-
-	logger.Debug("restoring snapshot", slog.String("hour", snapshot.When.String()))
-	return ferroamp.NewFaInMemData(&snapshot.Data)
 }
