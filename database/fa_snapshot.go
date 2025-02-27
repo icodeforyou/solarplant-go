@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log/slog"
@@ -60,15 +61,6 @@ func (d *Database) GetFaSnapshotForHour(from hours.DateHour) (FaSnapshotRow, err
 	return fs, nil
 }
 
-func initFaSnapshot(db *sql.DB) {
-	_, err := db.Exec(`
-		CREATE TABLE IF NOT EXISTS fa_snapshot (
-			date CHAR(10) NOT NULL,
-			hour INTEGER NOT NULL,
-			data TEXT NOT NULL,
-			CONSTRAINT fa_snapshot_pk PRIMARY KEY (date, hour)
-		)`)
-	if err != nil {
-		slog.Info("error when creating fa snapshot table", slog.Any("error", err))
-	}
+func (d *Database) PurgeFaSnapshot(ctx context.Context) error {
+	return d.purge(ctx, "fa_snapshot")
 }

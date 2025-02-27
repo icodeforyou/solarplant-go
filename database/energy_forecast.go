@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 
@@ -101,22 +102,6 @@ func (d *Database) GetEnergyForecastFrom(dh hours.DateHour) ([]EnergyForecastRow
 	return forecasts, nil
 }
 
-func initEnergyForecast(db *sql.DB) {
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS energy_forecast (
-		date CHAR(10) NOT NULL,
-		hour INTEGER NOT NULL,
-		production REAL NOT NULL,
-		consumption REAL NOT NULL,		
-		created INTEGER(4) NOT NULL DEFAULT (strftime('%s','now')),
-		updated INTEGER(4) NOT NULL DEFAULT (strftime('%s','now')),
-		CONSTRAINT energy_forecast_pk PRIMARY KEY (date, hour));
-
-		CREATE TRIGGER energy_forecast_updated AFTER UPDATE ON energy_forecast
-		BEGIN
-			UPDATE energy_forecast SET updated = (strftime('%s','now')) 
-			WHERE rowid = NEW.rowid;
-		END;`)
-	if err != nil {
-		slog.Info("error when creating energy forecast table", slog.Any("error", err))
-	}
+func (d *Database) PurgeEnergyForecast(ctx context.Context) error {
+	return d.purge(ctx, "energy_forecast")
 }

@@ -22,7 +22,17 @@ type AppConfigApi struct {
 	AdminPassword string  `mapstructure:"admin_password"`
 }
 
-type AppConfigDatabase struct{ Path string }
+type AppConfigDatabase struct {
+	Path          string
+	RetentionDays *uint `mapstructure:"retention_days"`
+}
+
+func (d AppConfigDatabase) GetRetentionDays() uint {
+	if d.RetentionDays == nil {
+		return 90
+	}
+	return *d.RetentionDays
+}
 
 type AppConfigFerroamp struct {
 	Host     string
