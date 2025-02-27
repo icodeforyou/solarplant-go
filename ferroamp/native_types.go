@@ -115,7 +115,7 @@ var esoFaultsCodes = map[uint16]string{
 	0x0001: "The pre-charge from battery to ESO is not reaching the voltage goal prohibiting the closing of the relays",
 	0x0002: "CAN communication issues between ESO and battery",
 	0x0004: "This indicates that the SoC limits for the batteries are not configured correctly, please contact Ferroamp Support for help",
-	0x0008: "This indicates that the power limits for the batteries are incorrect or non-optimal, can be ignored if system is controlled by extapi. If not controlled by extapi",
+	0x0008: "This indicates that the power limits for the batteries are incorrect or non-optimal. When controlling batteries via extapi and the system is set in either peak-shaving or self-consumption modes this flag may be set but it will not affect control. When not controlling batteries via extapi this indicates that the settings made in EMS Configuration is invalid",
 	0x0010: "On-site emergency stop has been triggered",
 	0x0020: "The DC-link voltage in ESO is so high that it prevents operation",
 	0x0040: "Indicates that the battery has an alarm or an error flag raised. Please check Battery manufacturer's manual for trouble shooting the battery, or call Ferroamp Support",

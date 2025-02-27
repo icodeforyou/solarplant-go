@@ -7,26 +7,12 @@ import (
 )
 
 type FaInMemData struct {
-	mu       sync.RWMutex
-	data     *FaData
-	snapshot *FaData
+	mu   sync.RWMutex
+	data *FaData
 }
 
-func NewFaInMemData(snapshot *FaData) *FaInMemData {
-	return &FaInMemData{
-		data:     NewFaData(),
-		snapshot: snapshot,
-	}
-}
-
-func (d *FaInMemData) TakeSnapshot() {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-	d.snapshot = d.data.Clone()
-}
-
-func (d *FaInMemData) HasSnapshot() bool {
-	return d.snapshot != nil
+func NewFaInMemData() *FaInMemData {
+	return &FaInMemData{data: NewFaData()}
 }
 
 func (d *FaInMemData) CurrentState() *FaData {
@@ -109,31 +95,6 @@ func (d *FaInMemData) ProductionLifetime() float64 {
 	return convert.TwoDecimals(convert.MJ2Kwh(sum))
 }
 
-/** Production since snapshot in kWh */
-func (d *FaInMemData) ProducedSinceSnapshot() float64 {
-	if d.snapshot == nil {
-		return 0
-	}
-
-	mj := d.data.Ehub.Wpv.Value - d.snapshot.Ehub.Wpv.Value
-	return convert.TwoDecimals(convert.MJ2Kwh(mj))
-
-	// This should work but values (wloadprodq) are not updateing as expected
-	// return convert.TwoDecimals(d.data.Ehub.LifetimeProduced() - d.snapshot.Ehub.LifetimeProduced())
-}
-
-/** Consumption since snapshot in kWh */
-func (d *FaInMemData) ConsumedSinceSnapshot() float64 {
-	if d.snapshot == nil {
-		return 0
-	}
-
-	d.mu.RLock()
-	defer d.mu.RUnlock()
-
-	return convert.TwoDecimals(d.data.Ehub.LifetimeConsumed() - d.snapshot.Ehub.LifetimeConsumed())
-}
-
 /** Solar power in kW */
 func (d *FaInMemData) SolarPower() float64 {
 	d.mu.RLock()
@@ -167,16 +128,29 @@ func (d *FaInMemData) BatteryPower() float64 {
 	return convert.TwoDecimals(d.data.Ehub.Pbat.Value / 1e3)
 }
 
-/** Battery net load since snapshot in kWh */
-func (d *FaInMemData) BatteryNetLoadSinceSnapshot() float64 {
+/** Production since given state in kWh */
+func (d *FaInMemData) ProducedSince(since FaData) float64 {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	mj := d.data.Ehub.Wpv.Value - since.Ehub.Wpv.Value
+	return convert.TwoDecimals(convert.MJ2Kwh(mj))
+	// This should work but values (wloadprodq) are not updateing as expected
+	// return convert.TwoDecimals(d.data.Ehub.LifetimeProduced() - from.Ehub.LifetimeProduced())
+}
+
+/** Consumption since given state in kWh */
+func (d *FaInMemData) ConsumedSince(since FaData) float64 {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	return convert.TwoDecimals(d.data.Ehub.LifetimeConsumed() - since.Ehub.LifetimeConsumed())
+}
+
+/** Battery net load since given state in kWh */
+func (d *FaInMemData) BatteryNetLoadSince(since FaData) float64 {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
-	if d.snapshot == nil {
-		return 0.0
-	}
-
-	prod := d.data.Ehub.WbatProd.Value - d.snapshot.Ehub.WbatProd.Value
-	cons := d.data.Ehub.WbatCons.Value - d.snapshot.Ehub.WbatCons.Value
+	prod := d.data.Ehub.WbatProd.Value - since.Ehub.WbatProd.Value
+	cons := d.data.Ehub.WbatCons.Value - since.Ehub.WbatCons.Value
 	return convert.TwoDecimals(convert.MJ2Kwh(prod - cons))
 }

@@ -30,7 +30,7 @@ func main() {
 		TimeFormat: time.RFC3339,
 	})
 
-	db, err := database.New(ctx, slog.New(consolHandler), config.Database.Path)
+	db, err := database.New(ctx, slog.New(consolHandler), config.Database.Path, config.Database.GetRetentionDays())
 	if err != nil {
 		panic(err)
 	}
@@ -47,7 +47,7 @@ func main() {
 		config.Ferroamp.Username,
 		config.Ferroamp.Password)
 
-	faData := newFaInMemData(logger, db)
+	faData := ferroamp.NewFaInMemData()
 	fa.OnEhubMessage = faData.SetEHub
 	fa.OnSsoMessage = faData.SetSso
 	fa.OnEsmMessage = faData.SetEsm

@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"log/slog"
 
@@ -195,27 +196,6 @@ func (d *Database) GetTimeSeriesWithEstimationsHour(from hours.DateHour) ([]Time
 	return ts, nil
 }
 
-func initTimeSeries(db *sql.DB) {
-	_, err := db.Exec(`
-		CREATE TABLE IF NOT EXISTS time_series (
-			date CHAR(10) NOT NULL,
-			hour INTEGER NOT NULL,
-			cloud_cover INTEGER NOT NULL,
-			temperature REAL NOT NULL,
-			precipitation REAL NOT NULL,
-			energy_price REAL NOT NULL,
-			consumption REAL NOT NULL,
-			production REAL NOT NULL,
-			production_lifetime REAL NOT NULL,
-			battery_level REAL NOT NULL,
-			battery_net_load REAL NOT NULL,
-			CONSTRAINT time_series_pk PRIMARY KEY (date, hour)
-		)`)
-	if err != nil {
-		slog.Info("error when creating time series table", slog.Any("error", err))
-	}
-}
-
 func scanTimeSeriesHours(rows *sql.Rows) ([]TimeSeriesRow, error) {
 	var ts []TimeSeriesRow
 	for rows.Next() {
@@ -240,4 +220,8 @@ func scanTimeSeriesHours(rows *sql.Rows) ([]TimeSeriesRow, error) {
 	}
 
 	return ts, nil
+}
+
+func (d *Database) PurgeTimeSeries(ctx context.Context) error {
+	return d.purge(ctx, "time_series")
 }

@@ -68,6 +68,7 @@ func (d *Database) GetLogEntries(ctx context.Context, minLvl slog.Level, page, p
 }
 
 func (d *Database) PurgeLog(ctx context.Context, maxLogEntries int) error {
+	d.logger.Debug("purging log")
 	_, err := d.write.ExecContext(ctx, `
 		DELETE FROM log WHERE id <= (
 			SELECT id FROM log ORDER BY id DESC LIMIT 1 OFFSET ?

@@ -12,51 +12,55 @@ func NewTimeSeriesTask(logger *slog.Logger, db *database.Database, faInMem *ferr
 	return func() {
 		logger.Debug("running time series task...")
 
-		defer faInMem.TakeSnapshot()
-
 		// This task runs every hour, so we need to subtract one hour
 		// to get the correct time for the snapshot. This is because
 		// the snapshot contains accumulated values for the last hour and
 		// this new hour has not yet been accumulated.
-		dh := hours.FromNow().Sub(1)
+		currHour := hours.FromNow().Sub(1)
 
 		db.SaveFaSnapshot(database.FaSnapshotRow{
-			When: dh,
+			When: currHour,
 			Data: *faInMem.CurrentState(),
 		})
 
-		if !faInMem.HasSnapshot() {
-			logger.Info("don't save time series, no snapshot from last hours...")
+		prevHour, err := db.GetFaSnapshotForHour(currHour.Sub(1))
+		if err != nil {
+			logger.Error("error when fetching snapshot from previous hour", slog.Any("error", err))
+		}
+
+		if prevHour.IsZero() {
+			logger.Info("don't save time series, no snapshot from previous hour...")
 			return
 		}
 
-		fc, err := db.GetWeatcherForecast(dh)
+		fc, err := db.GetWeatcherForecast(currHour)
 		if err != nil {
 			logger.Error("error when fetching forecast hour", slog.Any("error", err))
 			fc = database.WeatherForecastRow{}
 		}
-		ep, err := db.GetEnergyPriceForHour(dh)
+
+		ep, err := db.GetEnergyPriceForHour(currHour)
 		if err != nil {
 			logger.Error("error when fetching energy_price hour", slog.Any("error", err))
 			ep = database.EnergyPriceRow{}
 		}
 
 		db.SaveTimeSeries(database.TimeSeriesRow{
-			When:               dh,
+			When:               currHour,
 			CloudCover:         fc.CloudCover,
 			Temperature:        fc.Temperature,
 			Precipitation:      fc.Precipitation,
 			EnergyPrice:        ep.Price,
-			Production:         faInMem.ProducedSinceSnapshot(),
+			Production:         faInMem.ProducedSince(prevHour.Data),
 			ProductionLifetime: faInMem.ProductionLifetime(),
-			Consumption:        faInMem.ConsumedSinceSnapshot(),
+			Consumption:        faInMem.ConsumedSince(prevHour.Data),
 			BatteryLevel:       faInMem.BatteryLevel(),
-			BatteryNetLoad:     faInMem.BatteryNetLoadSinceSnapshot(),
+			BatteryNetLoad:     faInMem.BatteryNetLoadSince(prevHour.Data),
 		})
 
 		logger.Info("time series task done",
-			slog.Float64("productionLastHour", faInMem.ProducedSinceSnapshot()),
-			slog.Float64("consumtionLastHour", faInMem.ConsumedSinceSnapshot()),
+			slog.Float64("productionLastHour", faInMem.ProducedSince(prevHour.Data)),
+			slog.Float64("consumtionLastHour", faInMem.ConsumedSince(prevHour.Data)),
 			slog.Float64("productionLifetime", faInMem.ProductionLifetime()))
 	}
 }

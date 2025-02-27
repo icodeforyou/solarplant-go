@@ -1,7 +1,7 @@
 package database
 
 import (
-	"database/sql"
+	"context"
 	"log/slog"
 
 	"github.com/angas/solarplant-go/convert"
@@ -71,22 +71,6 @@ func (d *Database) GetEnergyPriceFrom(dh hours.DateHour) ([]EnergyPriceRow, erro
 	return energyPrices, nil
 }
 
-func initEnergyPrice(db *sql.DB) {
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS energy_price (
-	date CHAR(10) NOT NULL,
-	hour INTEGER NOT NULL,
-	price REAL,
-	created INTEGER(4) NOT NULL DEFAULT (strftime('%s','now')),
-	updated INTEGER(4) NOT NULL DEFAULT (strftime('%s','now')),
-	CONSTRAINT energy_price_pk PRIMARY KEY (date, hour));
-
-	CREATE TRIGGER energy_price_updated AFTER UPDATE ON energy_price
-	BEGIN
-		UPDATE energy_price SET updated = (strftime('%s','now'))
-		WHERE rowid = NEW.rowid;
-	END;`)
-
-	if err != nil {
-		slog.Info("error when creating energy price table", slog.Any("error", err))
-	}
+func (d *Database) PurgeEnergyPrice(ctx context.Context) error {
+	return d.purge(ctx, "energy_price")
 }
