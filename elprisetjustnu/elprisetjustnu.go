@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/angas/solarplant-go/hours"
@@ -31,13 +32,13 @@ func (e ElPrisetJustNu) GetEnergyPrices(ctx context.Context) ([]types.EnergyPric
 	t := time.Now()
 	today, err := e.getEnergyPrices(ctx, t.Year(), int(t.Month()), t.Day())
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch prices for today: %w", err)
+		return nil, fmt.Errorf("failed to fetch prices from elprisetjustnu for today: %w", err)
 	}
 
 	t = t.AddDate(0, 0, 1)
 	tomorrow, err := e.getEnergyPrices(ctx, t.Year(), int(t.Month()), t.Day())
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch prices for tomorrow: %w", err)
+		return nil, fmt.Errorf("failed to fetch prices from elprisetjustnu for tomorrow: %w", err)
 	}
 
 	return append(today, tomorrow...), nil
@@ -73,6 +74,10 @@ func (e ElPrisetJustNu) getEnergyPrices(ctx context.Context, y, m, d int) ([]typ
 
 	prices := make([]types.EnergyPrice, 0, len(rawPrices))
 	for _, raw := range rawPrices {
+		hour := hours.FromTime(raw.TimeStart)
+		if slices.ContainsFunc(prices, func(p types.EnergyPrice) bool { return p.Hour == hour }) {
+			continue
+		}
 		prices = append(prices, types.EnergyPrice{
 			Hour:  hours.FromTime(raw.TimeStart),
 			Price: raw.SEKPerKWh,

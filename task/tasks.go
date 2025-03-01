@@ -24,7 +24,7 @@ type Tasks struct {
 
 func NewTasks(
 	db *database.Database,
-	epFetcher types.EnergyPriceFetcher,
+	energyPriceProviders []types.EnergyPriceProvider,
 	faData *ferroamp.FaInMemData,
 	cnfg *config.AppConfig,
 ) *Tasks {
@@ -34,7 +34,7 @@ func NewTasks(
 		cnfg:                cnfg,
 		WeatherForecastTask: NewWeatcherForcastTask(logger.With(slog.String("task", "weather_forecast")), db, cnfg.WeatherForecast),
 		EnergyForecastTask:  NewEnergyForecastTask(logger.With(slog.String("task", "energy_forecast")), db, cnfg.EnergyForecast),
-		EnergyPriceTask:     NewEnergyPriceTask(logger.With(slog.String("task", "energy_price")), db, epFetcher),
+		EnergyPriceTask:     NewEnergyPriceTask(logger.With(slog.String("task", "energy_price")), db, energyPriceProviders),
 		TimeSeriesTask:      NewTimeSeriesTask(logger.With(slog.String("task", "time_series")), db, faData),
 		PlanningTask:        NewPlanningTask(logger.With(slog.String("task", "planning")), db, cnfg, faData),
 		MaintenanceTask:     NewMaintenanceTask(logger.With(slog.String("task", "maintenance")), db, cnfg),

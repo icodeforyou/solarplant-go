@@ -13,7 +13,9 @@ import (
 	"github.com/angas/solarplant-go/elprisetjustnu"
 	"github.com/angas/solarplant-go/ferroamp"
 	"github.com/angas/solarplant-go/logging"
+	"github.com/angas/solarplant-go/nordpool"
 	"github.com/angas/solarplant-go/task"
+	"github.com/angas/solarplant-go/types"
 	"github.com/angas/solarplant-go/www"
 	"github.com/lmittmann/tint"
 )
@@ -68,7 +70,12 @@ func main() {
 	}
 	defer fa.Disconnect()
 
-	tasks := task.NewTasks(db, elprisetjustnu.New(config.EnergyPrice.Area), faData, config)
+	energyPriceProviders := []types.EnergyPriceProvider{
+		elprisetjustnu.New(config.EnergyPrice.Area), // Primary provider
+		nordpool.New(config.EnergyPrice.Area),       // Secondary provider
+	}
+
+	tasks := task.NewTasks(db, energyPriceProviders, faData, config)
 	tasks.Run()
 	defer tasks.Stop()
 

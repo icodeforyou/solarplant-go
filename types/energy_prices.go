@@ -11,6 +11,6 @@ type EnergyPrice struct {
 	Price float64 // Price in SEK per kWh excluding VAT
 }
 
-type EnergyPriceFetcher interface {
+type EnergyPriceProvider interface {
 	GetEnergyPrices(ctx context.Context) ([]EnergyPrice, error)
 }

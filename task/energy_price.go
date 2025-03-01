@@ -10,37 +10,50 @@ import (
 	"github.com/angas/solarplant-go/types"
 )
 
-func NewEnergyPriceTask(logger *slog.Logger, db *database.Database, fetcher types.EnergyPriceFetcher) func() {
+func NewEnergyPriceTask(logger *slog.Logger, db *database.Database, providers []types.EnergyPriceProvider) func() {
+	if len(providers) == 0 {
+		panic("no energy price providers")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if needImmediateEnergyPriceUpdate(ctx, db) {
 		logger.Info("need an immediate update of energy prices")
-		runEnergyPriceTask(logger, db, fetcher)
+		runEnergyPriceTask(logger, db, providers)
 	} else {
 		logger.Debug("no need for immediate update of energy prices")
 	}
 
-	return func() { runEnergyPriceTask(logger, db, fetcher) }
+	return func() { runEnergyPriceTask(logger, db, providers) }
 }
 
-func runEnergyPriceTask(logger *slog.Logger, db *database.Database, fetcher types.EnergyPriceFetcher) {
+func runEnergyPriceTask(logger *slog.Logger, db *database.Database, providers []types.EnergyPriceProvider) {
 	logger.Debug("running energy price task...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	eps, err := fetcher.GetEnergyPrices(ctx)
-	if err != nil {
-		logger.Error("energy price task error, fetching energy prices", slog.Any("error", err))
+	var rows []database.EnergyPriceRow
+	for _, provider := range providers {
+		prices, err := provider.GetEnergyPrices(ctx)
+		if err != nil {
+			logger.Error("energy price task error, fetching energy prices", slog.Any("error", err))
+		} else {
+			rows = make([]database.EnergyPriceRow, len(prices))
+			for i, ep := range prices {
+				logger.Debug("energy price", slog.String("hour", ep.Hour.String()), slog.Float64("price", ep.Price))
+				rows[i] = database.EnergyPriceRow{When: ep.Hour, Price: ep.Price}
+			}
+			break
+		}
+	}
+
+	if len(rows) == 0 {
+		logger.Error("energy price task error, no prices fetched")
 		return
 	}
 
-	var rows []database.EnergyPriceRow = make([]database.EnergyPriceRow, 0, len(eps))
-	for _, ep := range eps {
-		logger.Debug("energy price", slog.String("hour", ep.Hour.String()), slog.Float64("price", ep.Price))
-		rows = append(rows, database.EnergyPriceRow{When: ep.Hour, Price: ep.Price})
-	}
-	err = db.SaveEnergyPrices(ctx, rows)
+	err := db.SaveEnergyPrices(ctx, rows)
 	if err != nil {
 		logger.Error("energy price task error", slog.Any("error", err))
 		return

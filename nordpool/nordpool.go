@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"log/slog"
+	"math"
 	"net/http"
-	"strconv"
-	"strings"
+	"slices"
 	"time"
 
 	"github.com/angas/solarplant-go/hours"
@@ -17,7 +15,6 @@ import (
 
 type Nordpool struct {
 	area string
-	page int16
 }
 
 func New(area string) Nordpool {
@@ -25,53 +22,70 @@ func New(area string) Nordpool {
 }
 
 func (n Nordpool) GetEnergyPrices(ctx context.Context) ([]types.EnergyPrice, error) {
-	url := fmt.Sprintf("%s/marketdata/page/%d?currency=SEK", API_URL, n.page)
 
-	slog.Default().Info("Fetching energy prices from Nordpool...", "url", url)
-
-	req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
-	client := http.Client{Timeout: 10 * time.Second}
-	res, err := client.Do(req)
+	t := time.Now()
+	today, err := n.getEnergyPrices(ctx, t)
 	if err != nil {
-		return nil, fmt.Errorf("error getting NordPool prices: %v", err)
+		return nil, fmt.Errorf("failed to fetch prices from nordpool for today: %w", err)
 	}
-	defer res.Body.Close()
 
-	body, err := io.ReadAll(res.Body)
+	tomorrow, err := n.getEnergyPrices(ctx, t.AddDate(0, 0, 1))
 	if err != nil {
-		return nil, fmt.Errorf("error reading NordPool response body: %v", err)
+		return nil, fmt.Errorf("failed to fetch prices from nordpool for tomorrow: %w", err)
 	}
 
-	var nordpool nordpool
-	if err := json.Unmarshal(body, &nordpool); err != nil {
-		return nil, fmt.Errorf("error unmarshaling NordPool json: %v", err)
+	return append(today, tomorrow...), nil
+}
+
+func (n Nordpool) getEnergyPrices(ctx context.Context, date time.Time) ([]types.EnergyPrice, error) {
+	url := fmt.Sprintf("%s/api/DayAheadPrices?date=%s&market=DayAhead&deliveryArea=AT,%s&currency=SEK",
+		"https://dataportal-api.nordpoolgroup.com",
+		date.Format("2006-01-02"),
+		n.area)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch prices: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return []types.EnergyPrice{}, nil
 	}
 
-	result := make([]types.EnergyPrice, 0)
-	for _, row := range nordpool.Data.Rows {
-		for _, column := range row.Columns {
-			if column.Name == n.area {
-				t, err := time.Parse("2006-01-02T15:04:05", row.StartTime)
-				if err != nil {
-					return nil, fmt.Errorf("error parsing time: %v", err)
-				}
-				result = append(result, types.EnergyPrice{
-					Hour:  hours.FromTime(t),
-					Price: priceToFloat(column.Value),
-				})
-			}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	var nordpoolData nordpoolData
+	if err := json.NewDecoder(resp.Body).Decode(&nordpoolData); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	prices := make([]types.EnergyPrice, 0)
+	for _, entry := range nordpoolData.MultiAreaEntries {
+		hour := hours.FromTime(entry.DeliveryStart)
+		if slices.ContainsFunc(prices, func(p types.EnergyPrice) bool { return p.Hour == hour }) {
+			continue
+		}
+		price, ok := entry.EntryPerArea[n.area]
+		if ok {
+			prices = append(prices, types.EnergyPrice{
+				Hour:  hour,
+				Price: normalizePrice(price),
+			})
 		}
 	}
 
-	return result, nil
+	return prices, nil
 }
 
-func priceToFloat(str string) float64 {
-	noSpace := strings.ReplaceAll(str, " ", "")
-	noComma := strings.ReplaceAll(noSpace, ",", ".")
-	price, err := strconv.ParseFloat(noComma, 64)
-	if err != nil {
-		return 0
-	}
-	return price / 1e3
+func normalizePrice(price float64) float64 {
+	precision := math.Pow(10, float64(4))
+	return math.Round(price*precision/1e3) / precision
 }
