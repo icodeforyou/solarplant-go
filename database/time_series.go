@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
-	"log/slog"
+	"fmt"
 
 	"github.com/angas/solarplant-go/convert"
 	"github.com/angas/solarplant-go/hours"
@@ -28,7 +28,7 @@ type TimeSeriesWithEstimationsRow struct {
 	EstimatedProduction  sql.NullFloat64
 }
 
-func (d *Database) SaveTimeSeries(row TimeSeriesRow) {
+func (d *Database) SaveTimeSeries(ctx context.Context, row TimeSeriesRow) error {
 	d.logger.Debug("saving time series",
 		"hour", row.When,
 		"cloud_cover", row.CloudCover,
@@ -41,7 +41,7 @@ func (d *Database) SaveTimeSeries(row TimeSeriesRow) {
 		"battery_level", row.BatteryLevel,
 		"battery_net_load", row.BatteryNetLoad)
 
-	_, err := d.write.Exec(`
+	_, err := d.write.ExecContext(ctx, `
 		INSERT INTO time_series (
 			date,
 			hour,
@@ -68,10 +68,15 @@ func (d *Database) SaveTimeSeries(row TimeSeriesRow) {
 		convert.TwoDecimals(row.BatteryLevel),
 		convert.TwoDecimals(row.BatteryNetLoad),
 	)
-	panicOnError(err, "saving time series") // TODO: Handle this error properly instead of panicking
+
+	if err != nil {
+		return fmt.Errorf("saving time series: %w", err)
+	}
+
+	return nil
 }
 
-func (d *Database) GetTimeSeriesForHour(from hours.DateHour) ([]TimeSeriesRow, error) {
+func (d *Database) GetTimeSeriesForHour(ctx context.Context, dh hours.DateHour) ([]TimeSeriesRow, error) {
 	rows, err := d.read.Query(`
 		SELECT 
 			date, 
@@ -88,24 +93,22 @@ func (d *Database) GetTimeSeriesForHour(from hours.DateHour) ([]TimeSeriesRow, e
 		FROM time_series
 		WHERE date >= ? AND hour = ?
 		ORDER BY date, hour ASC`,
-		from.Date, from.Hour)
+		dh.Date, dh.Hour)
 	if err != nil {
-		d.logger.Error("error when fetching time series", slog.Any("error", err))
-		return nil, err
+		return nil, fmt.Errorf("fetching time series for %s: %w", dh, err)
 	}
 
 	defer rows.Close()
 
 	ts, err := scanTimeSeriesHours(rows)
 	if err != nil {
-		d.logger.Error("error when scanning time series row", slog.Any("error", err))
-		return ts, err
+		return ts, fmt.Errorf("scanning time series row: %w", err)
 	}
 
 	return ts, nil
 }
 
-func (d *Database) GetTimeSeriesSinceHour(from hours.DateHour) ([]TimeSeriesRow, error) {
+func (d *Database) GetTimeSeriesSinceHour(dh hours.DateHour) ([]TimeSeriesRow, error) {
 	rows, err := d.read.Query(`
 		SELECT 
 			date, 
@@ -122,25 +125,23 @@ func (d *Database) GetTimeSeriesSinceHour(from hours.DateHour) ([]TimeSeriesRow,
 		FROM time_series
 		WHERE date >= ? AND hour >= ?
 		ORDER BY date, hour ASC`,
-		from.Date, from.Hour, from.Date)
+		dh.Date, dh.Hour, dh.Date)
 	if err != nil {
-		d.logger.Error("error when fetching time series", slog.Any("error", err))
-		return nil, err
+		return nil, fmt.Errorf("fetching time series since %s: %w", dh, err)
 	}
 
 	defer rows.Close()
 
 	ts, err := scanTimeSeriesHours(rows)
 	if err != nil {
-		d.logger.Error("error when scanning time series row", slog.Any("error", err))
-		return ts, err
+		return ts, fmt.Errorf("scanning time series row: %w", err)
 	}
 
 	return ts, nil
 }
 
-func (d *Database) GetTimeSeriesWithEstimationsHour(from hours.DateHour) ([]TimeSeriesWithEstimationsRow, error) {
-	rows, err := d.read.Query(`
+func (d *Database) GetTimeSeriesWithEstimationsHour(ctx context.Context, dh hours.DateHour) ([]TimeSeriesWithEstimationsRow, error) {
+	rows, err := d.read.QueryContext(ctx, `
 		SELECT 
 			ts.date,
 			ts.hour,
@@ -160,10 +161,9 @@ func (d *Database) GetTimeSeriesWithEstimationsHour(from hours.DateHour) ([]Time
 		WHERE (ts.date > ?)
 			OR (ts.date = ? AND ts.hour >= ?)
 		ORDER BY ts.date, ts.hour ASC`,
-		from.Date, from.Date, from.Hour)
+		dh.Date, dh.Date, dh.Hour)
 	if err != nil {
-		d.logger.Error("error when fetching time series with estimations", slog.Any("error", err))
-		return nil, err
+		return nil, fmt.Errorf("fetching time series with estimations for %s: %w", dh, err)
 	}
 
 	defer rows.Close()
@@ -186,8 +186,7 @@ func (d *Database) GetTimeSeriesWithEstimationsHour(from hours.DateHour) ([]Time
 			&t.BatteryLevel,
 			&t.BatteryNetLoad)
 		if err != nil {
-			d.logger.Error("error when scanning time series with estimations row", slog.Any("error", err))
-			return nil, err
+			return nil, fmt.Errorf("scanning time series with estimations row: %w", err)
 		}
 
 		ts = append(ts, t)

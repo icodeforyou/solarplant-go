@@ -31,10 +31,11 @@ type Server struct {
 //go:embed static
 var embeddedStaticDir embed.FS
 
-func StartServer(logger *slog.Logger, config config.AppConfigApi, db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemData) *Server {
-	tm, err := NewTemplateManager(config.WwwDir)
+func StartServer(db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemData, config config.AppConfigApi) *Server {
+	logger := slog.Default().With("module", "www")
+	tm, err := NewTemplateManager(logger, config.WwwDir)
 	if err != nil {
-		logger.Error("template manager failed", slog.Any("error", err))
+		logger.Error("template manager initialization error", slog.Any("error", err))
 	}
 
 	s := &Server{
@@ -48,14 +49,63 @@ func StartServer(logger *slog.Logger, config config.AppConfigApi, db *database.D
 
 	go s.hub.Run()
 
+	logReqMW := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			s.logger.Debug("http request",
+				slog.String("method", r.Method),
+				slog.String("url", r.URL.String()),
+				slog.String("remoteAddr", r.RemoteAddr))
+			next.ServeHTTP(w, r)
+		})
+	}
+
 	http.Handle("/", staticFilesHandler(config.WwwDir))
-	http.HandleFunc("/time_series", NewTimeSeriesHandler(s.config, s.db, s.tm, tasks.TimeSeriesTask))
-	http.HandleFunc("/energy_price", NewEnergyPriceHandler(s.config, s.db, s.tm, tasks.EnergyPriceTask))
-	http.HandleFunc("/weather_forecast", NewWeatherForecastHandler(s.config, s.db, s.tm, tasks.WeatherForecastTask))
-	http.HandleFunc("/energy_forecast", NewEnergyForecastHandler(s.config, s.db, s.tm, tasks.EnergyForecastTask))
-	http.HandleFunc("/planning", NewPlanningHandler(s.config, s.db, s.tm, tasks.PlanningTask))
-	http.HandleFunc("/log", NewLogHandler(s.config, s.db, s.tm))
-	http.HandleFunc("/chart", NewChartHandler(s.db))
+
+	http.Handle("/time_series", logReqMW(NewTimeSeriesHandler(
+		logger.With(slog.String("handler", "time_series")),
+		s.config,
+		s.db,
+		s.tm,
+		tasks.TimeSeriesTask)))
+
+	http.Handle("/energy_price", logReqMW(NewEnergyPriceHandler(
+		logger.With(slog.String("handler", "time_series")),
+		s.config,
+		s.db,
+		s.tm,
+		tasks.EnergyPriceTask)))
+
+	http.Handle("/weather_forecast", logReqMW(NewWeatherForecastHandler(
+		logger.With(slog.String("handler", "time_series")),
+		s.config,
+		s.db,
+		s.tm,
+		tasks.WeatherForecastTask)))
+
+	http.Handle("/energy_forecast", logReqMW(NewEnergyForecastHandler(
+		logger.With(slog.String("handler", "time_series")),
+		s.config,
+		s.db,
+		s.tm,
+		tasks.EnergyForecastTask)))
+
+	http.Handle("/planning", logReqMW(NewPlanningHandler(
+		logger.With(slog.String("handler", "time_series")),
+		s.config,
+		s.db,
+		s.tm,
+		tasks.PlanningTask)))
+
+	http.Handle("/log", logReqMW(NewLogHandler(logger.With(
+		slog.String("handler", "time_series")),
+		s.config,
+		s.db,
+		s.tm)))
+
+	http.Handle("/chart", logReqMW(NewChartHandler(
+		logger.With(slog.String("handler", "time_series")),
+		s.db)))
+
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		name := r.Header.Get("User-Agent")
 		client, err := NewClient(s.hub, w, r, name)
@@ -109,7 +159,7 @@ func (s *Server) Run(ctx context.Context) {
 			hour := hours.FromNow()
 			// TODO: This is a hack to get the current hour's planning,
 			// it should be done in a more efficient way.
-			planning, err := s.db.GetPlanningForHour(hour)
+			planning, err := s.db.GetPlanningForHour(ctx, hour)
 			if err != nil {
 				if !fetchPanningErrorState {
 					fetchPanningErrorState = true
@@ -122,7 +172,7 @@ func (s *Server) Run(ctx context.Context) {
 
 			// TODO: This is a hack to get the current hour's ,
 			// it should be done in a more efficient way.
-			price, err := s.db.GetEnergyPriceForHour(hour)
+			price, err := s.db.GetEnergyPriceForHour(ctx, hour)
 			if err != nil {
 				if !fetchEnergyPriceErrorState {
 					fetchEnergyPriceErrorState = true

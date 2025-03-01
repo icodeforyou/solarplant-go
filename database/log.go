@@ -22,7 +22,7 @@ func (d *Database) SaveLogEntry(ctx context.Context, r LogEntryRow) error {
 		r.Level,
 		r.Message,
 		r.Attrs)
-	return err
+	return fmt.Errorf("saving log entry: %w", err)
 }
 
 func (d *Database) GetLogEntries(ctx context.Context, minLvl slog.Level, page, pageSize int) ([]LogEntryRow, error) {
@@ -42,7 +42,7 @@ func (d *Database) GetLogEntries(ctx context.Context, minLvl slog.Level, page, p
 		minLvl, pageSize, (page-1)*pageSize)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetching log entries: %w", err)
 	}
 	defer rows.Close()
 
@@ -70,8 +70,9 @@ func (d *Database) GetLogEntries(ctx context.Context, minLvl slog.Level, page, p
 func (d *Database) PurgeLog(ctx context.Context, maxLogEntries int) error {
 	d.logger.Debug("purging log")
 	_, err := d.write.ExecContext(ctx, `
-		DELETE FROM log WHERE id <= (
-			SELECT id FROM log ORDER BY id DESC LIMIT 1 OFFSET ?
-		)`, maxLogEntries)
-	return err
+		DELETE FROM log WHERE id <= (SELECT id FROM log ORDER BY id DESC LIMIT 1 OFFSET ?)`, maxLogEntries)
+	if err != nil {
+		return fmt.Errorf("purging log: %w", err)
+	}
+	return nil
 }

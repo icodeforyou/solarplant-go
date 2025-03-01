@@ -43,7 +43,7 @@ type Ferroamp struct {
 }
 
 func New(broker string, port int16, username string, password string) *Ferroamp {
-	logger := slog.Default()
+	logger := slog.Default().With("module", "ferroamp")
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", broker, port))
 	opts.SetClientID("solarplant")

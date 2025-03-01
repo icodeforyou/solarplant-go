@@ -2,7 +2,7 @@ package database
 
 import (
 	"context"
-	"log/slog"
+	"fmt"
 
 	"github.com/angas/solarplant-go/convert"
 	"github.com/angas/solarplant-go/hours"
@@ -15,7 +15,7 @@ type WeatherForecastRow struct {
 	Precipitation float64
 }
 
-func (d *Database) SaveForcast(rows []WeatherForecastRow) {
+func (d *Database) SaveForcast(ctx context.Context, rows []WeatherForecastRow) error {
 	for _, row := range rows {
 		d.logger.Debug("saving weather forecast",
 			"hour", row.When,
@@ -23,7 +23,7 @@ func (d *Database) SaveForcast(rows []WeatherForecastRow) {
 			"temperature", row.Temperature,
 			"precipitation", row.Precipitation)
 
-		_, err := d.write.Exec(`
+		_, err := d.write.ExecContext(ctx, `
 		INSERT INTO weather_forecast (
 			date,
 			hour, 
@@ -40,12 +40,16 @@ func (d *Database) SaveForcast(rows []WeatherForecastRow) {
 			row.CloudCover,
 			convert.TwoDecimals(row.Temperature),
 			convert.TwoDecimals(row.Precipitation))
-		panicOnError(err, "saving weather forecast") // TODO: Handle this error properly instead of panicking
+		if err != nil {
+			return fmt.Errorf("saving weather forecast: %w", err)
+		}
 	}
+
+	return nil
 }
 
-func (d *Database) GetWeatcherForecast(dh hours.DateHour) (WeatherForecastRow, error) {
-	row := d.read.QueryRow(`
+func (d *Database) GetWeatcherForecast(ctx context.Context, dh hours.DateHour) (WeatherForecastRow, error) {
+	row := d.read.QueryRowContext(ctx, `
 		SELECT date, hour, cloud_cover, temperature, precipitation
 		FROM weather_forecast 
 		WHERE date = ? AND hour = ?`,
@@ -59,22 +63,20 @@ func (d *Database) GetWeatcherForecast(dh hours.DateHour) (WeatherForecastRow, e
 		&fc.Temperature,
 		&fc.Precipitation)
 	if err != nil {
-		d.logger.Error("error when scanning weather forecast row", slog.Any("error", err))
-		return WeatherForecastRow{}, err
+		return WeatherForecastRow{}, fmt.Errorf("fetching weather forecast for %s: %w", dh, err)
 	}
 
 	return fc, nil
 }
 
-func (d *Database) GetWeatherForecastFrom(dh hours.DateHour) ([]WeatherForecastRow, error) {
-	rows, err := d.read.Query(`
+func (d *Database) GetWeatherForecastFrom(ctx context.Context, dh hours.DateHour) ([]WeatherForecastRow, error) {
+	rows, err := d.read.QueryContext(ctx, `
 		SELECT date, hour, cloud_cover, temperature, precipitation
 		FROM weather_forecast 
 		WHERE (date = ? AND hour >= ?) OR date > ?`,
 		dh.Date, dh.Hour, dh.Date)
 	if err != nil {
-		d.logger.Error("error when fetching weather forecast", slog.Any("error", err))
-		return nil, err
+		return nil, fmt.Errorf("fetching weather forecast from %s: %w", dh, err)
 	}
 
 	defer rows.Close()
@@ -89,8 +91,7 @@ func (d *Database) GetWeatherForecastFrom(dh hours.DateHour) ([]WeatherForecastR
 			&row.Temperature,
 			&row.Precipitation)
 		if err != nil {
-			d.logger.Error("error when scanning weather forecast row", slog.Any("error", err))
-			return nil, err
+			return nil, fmt.Errorf("scanning weather forecast row: %w", err)
 		}
 
 		forecasts = append(forecasts, row)

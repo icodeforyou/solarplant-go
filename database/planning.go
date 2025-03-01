@@ -2,8 +2,8 @@ package database
 
 import (
 	"context"
-	"errors"
-	"log/slog"
+	"database/sql"
+	"fmt"
 
 	"github.com/angas/solarplant-go/hours"
 )
@@ -13,8 +13,12 @@ type PlanningRow struct {
 	Strategy string
 }
 
-func (d *Database) SavePanning(row PlanningRow) {
-	_, err := d.write.Exec(`
+func (d *Database) SavePanning(ctx context.Context, row PlanningRow) error {
+	d.logger.Debug("saving planning",
+		"hour", row.When,
+		"strategy", row.Strategy)
+
+	_, err := d.write.ExecContext(ctx, `
 		INSERT INTO planning (date, hour, strategy)
 		VALUES (?, ?, ?) 
 		ON CONFLICT(date, hour) DO UPDATE SET strategy = excluded.strategy;`,
@@ -22,19 +26,21 @@ func (d *Database) SavePanning(row PlanningRow) {
 		row.When.Hour,
 		row.Strategy,
 	)
-	panicOnError(err, "saving planning row") // TODO: Handle this error properly instead of panicking
+	if err != nil {
+		return fmt.Errorf("saving planning row: %w", err)
+	}
+	return nil
 }
 
-func (d *Database) GetPlanningFrom(from hours.DateHour) ([]PlanningRow, error) {
-	rows, err := d.read.Query(`
+func (d *Database) GetPlanningFrom(ctx context.Context, dh hours.DateHour) ([]PlanningRow, error) {
+	rows, err := d.read.QueryContext(ctx, `
 		SELECT date, hour, strategy
 		FROM planning
 		WHERE (date > ?) OR (date = ? AND hour >= ?)
 		ORDER BY date, hour ASC`,
-		from.Date, from.Date, from.Hour)
+		dh.Date, dh.Date, dh.Hour)
 	if err != nil {
-		d.logger.Error("error when fetching planning from date-hour", slog.Any("error", err))
-		return nil, err
+		return nil, fmt.Errorf("fetching planning from %s: %w", dh, err)
 	}
 	defer rows.Close()
 
@@ -51,26 +57,25 @@ func (d *Database) GetPlanningFrom(from hours.DateHour) ([]PlanningRow, error) {
 	return res, nil
 }
 
-func (d *Database) GetPlanningForHour(from hours.DateHour) (PlanningRow, error) {
-	rows, err := d.read.Query(`
+func (d *Database) GetPlanningForHour(ctx context.Context, dh hours.DateHour) (PlanningRow, error) {
+	rows, err := d.read.QueryContext(ctx, `
 		SELECT date, hour, strategy
 		FROM planning
 		WHERE date = ? AND hour = ?`,
-		from.Date, from.Hour)
+		dh.Date, dh.Hour)
 	if err != nil {
-		d.logger.Error("error when fetching planning for date-hour", slog.Any("error", err))
-		return PlanningRow{}, err
+		return PlanningRow{}, fmt.Errorf("fetching planning for %s: %w", dh, err)
 	}
 	defer rows.Close()
 
 	if !rows.Next() {
-		return PlanningRow{}, errors.New("no planning row found")
+		return PlanningRow{}, sql.ErrNoRows
 	}
 
 	var row PlanningRow
 	err = rows.Scan(&row.When.Date, &row.When.Hour, &row.Strategy)
 	if err != nil {
-		return PlanningRow{}, err
+		return PlanningRow{}, fmt.Errorf("scanning planning row: %w", err)
 	}
 
 	return row, nil

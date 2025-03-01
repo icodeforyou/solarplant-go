@@ -35,7 +35,7 @@ const initSQL = `
  * New creates a new database connection.
  * Inspired by: https://theitsolutions.io/blog/modernc.org-sqlite-with-go
  */
-func New(ctx context.Context, logger *slog.Logger, path string, retentionDays uint) (*Database, error) {
+func New(ctx context.Context, path string, retentionDays uint) (*Database, error) {
 	sqlite.RegisterConnectionHook(func(conn sqlite.ExecQuerierContext, _ string) error {
 		_, err := conn.ExecContext(ctx, initSQL, nil)
 		return err
@@ -43,16 +43,15 @@ func New(ctx context.Context, logger *slog.Logger, path string, retentionDays ui
 
 	read, err := sql.Open("sqlite", path)
 	if err != nil {
-		logger.Error("error when opening database (read)", slog.Any("error", err))
-		return nil, err
+		return nil, fmt.Errorf("error when opening database (read): %w", err)
 	}
 	read.SetMaxOpenConns(10) // readers can be concurrent
 	read.SetConnMaxIdleTime(time.Minute)
 
 	write, err := sql.Open("sqlite", path)
 	if err != nil {
-		logger.Error("error when opening database (write)", slog.Any("error", err))
-		return nil, err
+		read.Close()
+		return nil, fmt.Errorf("error when opening database (write): %w", err)
 	}
 	write.SetMaxOpenConns(1) // only a single writer ever, no concurrency
 	write.SetConnMaxIdleTime(time.Minute)
@@ -61,7 +60,7 @@ func New(ctx context.Context, logger *slog.Logger, path string, retentionDays ui
 	panicOnError(err, "migrating")
 
 	return &Database{
-			logger:        logger,
+			logger:        slog.Default().With(slog.String("module", "database")),
 			read:          read,
 			write:         write,
 			path:          path,
@@ -88,7 +87,7 @@ func (d *Database) purge(ctx context.Context, table string) error {
 		WHERE (date = ? AND hour < ?) OR date < ?`, table),
 		before.Date, before.Hour, before.Date)
 	if err != nil {
-		return fmt.Errorf("error when purging from %s: %w", table, err)
+		return fmt.Errorf("error when purging %s: %w", table, err)
 	}
 	rows, err := res.RowsAffected()
 	if err != nil {

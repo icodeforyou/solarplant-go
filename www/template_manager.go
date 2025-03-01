@@ -57,9 +57,9 @@ var funcMap = template.FuncMap{
 	"Subtract": func(a, b int) int { return a - b },
 }
 
-func NewTemplateManager(extDir *string) (*TemplateManager, error) {
+func NewTemplateManager(logger *slog.Logger, extDir *string) (*TemplateManager, error) {
 	tm := &TemplateManager{
-		logger: slog.Default(),
+		logger: logger,
 	}
 
 	if extDir != nil {
@@ -146,7 +146,7 @@ func (tm *TemplateManager) Execute(name string, data interface{}) (bytes.Buffer,
 	return buf, nil
 }
 
-func (tm *TemplateManager) ExecuteToWriter(name string, data interface{}, wr *http.ResponseWriter) error {
+func (tm *TemplateManager) ExecuteToWriter(name string, data any, wr *http.ResponseWriter) error {
 	tm.mutex.RLock()
 	err := tm.templates.ExecuteTemplate(*wr, name, data)
 	tm.mutex.RUnlock()

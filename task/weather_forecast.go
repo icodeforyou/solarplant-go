@@ -1,7 +1,9 @@
 package task
 
 import (
+	"context"
 	"log/slog"
+	"time"
 
 	"github.com/angas/solarplant-go/config"
 	"github.com/angas/solarplant-go/database"
@@ -11,7 +13,10 @@ import (
 )
 
 func NewWeatcherForcastTask(logger *slog.Logger, db *database.Database, config config.AppConfigWeatcherForecast) func() {
-	if needImmediateForcastUpdate(db) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if needImmediateForcastUpdate(ctx, db) {
 		logger.Info("need an immediate update of weather forecast")
 		runForcastTask(logger, db, config)
 	} else {
@@ -26,19 +31,24 @@ func NewWeatcherForcastTask(logger *slog.Logger, db *database.Database, config c
 func runForcastTask(logger *slog.Logger, db *database.Database, config config.AppConfigWeatcherForecast) {
 	logger.Debug("running weather forecast task...")
 
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	fc, err := smhi.Get(config.Longitude, config.Latitude)
 	if err != nil {
-		logger.Error("error fetching weather forecast", slog.Any("error", err))
+		logger.Error("weather forecast task error", slog.Any("error", err))
 	} else {
-		db.SaveForcast(slice.Map(fc, toWeatherForecastRow))
+		if err = db.SaveForcast(ctx, slice.Map(fc, toWeatherForecastRow)); err != nil {
+			logger.Error("weather forecast task error", slog.Any("error", err))
+		}
 	}
 
 	logger.Info("weather forecast task done", slog.Int("noOfHoursUpdated", len(fc)))
 }
 
-func needImmediateForcastUpdate(db *database.Database) bool {
+func needImmediateForcastUpdate(ctx context.Context, db *database.Database) bool {
 	dh := hours.FromNow().Add(1)
-	if _, err := db.GetWeatcherForecast(dh); err != nil {
+	if _, err := db.GetWeatcherForecast(ctx, dh); err != nil {
 		return true
 	}
 	return false

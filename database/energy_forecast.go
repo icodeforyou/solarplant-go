@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"database/sql"
-	"log/slog"
+	"fmt"
 
 	"github.com/angas/solarplant-go/convert"
 	"github.com/angas/solarplant-go/hours"
@@ -15,9 +15,14 @@ type EnergyForecastRow struct {
 	Consumption float64
 }
 
-func (d *Database) SaveEnergyForecast(rows []EnergyForecastRow) {
+func (d *Database) SaveEnergyForecast(ctx context.Context, rows []EnergyForecastRow) error {
 	for _, row := range rows {
-		_, err := d.write.Exec(`
+		d.logger.Debug("saving energy forecast",
+			"hour", row.When,
+			"production", row.Production,
+			"consumption", row.Consumption)
+
+		_, err := d.write.ExecContext(ctx, `
 		INSERT INTO energy_forecast (
 			date,
 			hour,
@@ -32,12 +37,15 @@ func (d *Database) SaveEnergyForecast(rows []EnergyForecastRow) {
 			convert.TwoDecimals(row.Production),
 			convert.TwoDecimals(row.Consumption),
 		)
-		panicOnError(err, "saving energy forecast") // TODO: Handle this error properly instead of panicking
+		if err != nil {
+			return fmt.Errorf("saving energy forecast: %w", err)
+		}
 	}
+	return nil
 }
 
-func (d *Database) GetEnergyForecast(dh hours.DateHour) (EnergyForecastRow, error) {
-	rows, err := d.read.Query(`
+func (d *Database) GetEnergyForecast(ctx context.Context, dh hours.DateHour) (EnergyForecastRow, error) {
+	rows, err := d.read.QueryContext(ctx, `
 		SELECT
 			date,
 			hour,
@@ -47,8 +55,7 @@ func (d *Database) GetEnergyForecast(dh hours.DateHour) (EnergyForecastRow, erro
 		WHERE (date = ? AND hour = ?)`,
 		dh.Date, dh.Hour)
 	if err != nil {
-		d.logger.Error("error when fetching energy forecast", slog.Any("error", err))
-		return EnergyForecastRow{}, err
+		return EnergyForecastRow{}, fmt.Errorf("fetching energy forecast for %s: %w", dh, err)
 	}
 	defer rows.Close()
 
@@ -63,14 +70,14 @@ func (d *Database) GetEnergyForecast(dh hours.DateHour) (EnergyForecastRow, erro
 		&row.Production,
 		&row.Consumption)
 	if err != nil {
-		return EnergyForecastRow{}, err
+		return EnergyForecastRow{}, fmt.Errorf("scanning energy forecast row: %w", err)
 	}
 
 	return row, nil
 }
 
-func (d *Database) GetEnergyForecastFrom(dh hours.DateHour) ([]EnergyForecastRow, error) {
-	rows, err := d.read.Query(`
+func (d *Database) GetEnergyForecastFrom(ctx context.Context, dh hours.DateHour) ([]EnergyForecastRow, error) {
+	rows, err := d.read.QueryContext(ctx, `
 		SELECT
 			date,
 			hour,
@@ -80,8 +87,7 @@ func (d *Database) GetEnergyForecastFrom(dh hours.DateHour) ([]EnergyForecastRow
 		WHERE (date = ? AND hour >= ?) OR date > ?`,
 		dh.Date, dh.Hour, dh.Date)
 	if err != nil {
-		d.logger.Error("error when fetching energy forecast from date-hour", slog.Any("error", err))
-		return nil, err
+		return nil, fmt.Errorf("fetching energy forecast from %s: %w", dh, err)
 	}
 	defer rows.Close()
 

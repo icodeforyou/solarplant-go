@@ -19,12 +19,12 @@ func migrate(ctx context.Context, db *sql.DB) error {
 	var currVer int
 	err := db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&currVer)
 	if err != nil {
-		return fmt.Errorf("can't get current version: %w", err)
+		return fmt.Errorf("get current version: %w", err)
 	}
 
 	files, err := migrationsDir.ReadDir("migrations")
 	if err != nil {
-		return fmt.Errorf("failed to read migrations directory: %w", err)
+		return fmt.Errorf("read migrations directory: %w", err)
 	}
 
 	var sqlFiles []string
@@ -41,11 +41,11 @@ func migrate(ctx context.Context, db *sql.DB) error {
 	for _, name := range sqlFiles {
 		matches := re.FindStringSubmatch(name)
 		if len(matches) < 2 {
-			return fmt.Errorf("couldn't parse version from migration file: %s", name)
+			return fmt.Errorf("parse version from migration file: %s", name)
 		}
 		nextVer, err := strconv.Atoi(matches[1])
 		if err != nil {
-			return fmt.Errorf("failed to convert migration version from file %s: %w", name, err)
+			return fmt.Errorf("convert migration version from file %s: %w", name, err)
 		}
 		if nextVer <= currVer {
 			continue // Skip migration if already applied
@@ -53,29 +53,29 @@ func migrate(ctx context.Context, db *sql.DB) error {
 
 		data, err := migrationsDir.ReadFile(path.Join("migrations", name))
 		if err != nil {
-			return fmt.Errorf("failed to read migration file %s: %w", name, err)
+			return fmt.Errorf("read migration file %s: %w", name, err)
 		}
 
 		tx, err := db.BeginTx(ctx, nil)
 		if err != nil {
-			return fmt.Errorf("failed to start transaction for migration %d: %w", nextVer, err)
+			return fmt.Errorf("start transaction for migration %d: %w", nextVer, err)
 		}
 
 		_, err = tx.ExecContext(ctx, string(data))
 		if err != nil {
 			tx.Rollback()
-			return fmt.Errorf("failed to apply migration %d: %w", nextVer, err)
+			return fmt.Errorf("apply migration %d: %w", nextVer, err)
 		}
 
 		_, err = tx.ExecContext(ctx, fmt.Sprintf("PRAGMA user_version = %d;", nextVer))
 		if err != nil {
 			tx.Rollback()
-			return fmt.Errorf("failed to update database version for migration %d: %w", nextVer, err)
+			return fmt.Errorf("update database version for migration %d: %w", nextVer, err)
 		}
 
 		err = tx.Commit()
 		if err != nil {
-			return fmt.Errorf("failed to commit migration %d: %w", nextVer, err)
+			return fmt.Errorf("commit migration %d: %w", nextVer, err)
 		}
 	}
 

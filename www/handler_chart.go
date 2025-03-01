@@ -2,6 +2,7 @@ package www
 
 import (
 	"encoding/json"
+	"log/slog"
 	"math"
 	"net/http"
 
@@ -10,12 +11,18 @@ import (
 	"github.com/angas/solarplant-go/www/chartjs"
 )
 
-func NewChartHandler(db *database.Database) http.HandlerFunc {
+func NewChartHandler(logger *slog.Logger, db *database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
 		midnight := hours.FromMidnight()
 
 		timeSeries, err := db.GetTimeSeriesSinceHour(midnight)
 		if err != nil {
+			logger.Error("handling chart request", slog.Any("error", err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -28,8 +35,9 @@ func NewChartHandler(db *database.Database) http.HandlerFunc {
 			return database.TimeSeriesRow{}
 		}
 
-		energyPrice, err := db.GetEnergyPriceFrom(midnight)
+		energyPrice, err := db.GetEnergyPriceFrom(r.Context(), midnight)
 		if err != nil {
+			logger.Error("handling chart request", slog.Any("error", err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -86,7 +94,8 @@ func NewChartHandler(db *database.Database) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode([]chartjs.Chart{chart1, chart2})
 		if err != nil {
-			http.Error(w, "Unable to encode data points", http.StatusInternalServerError)
+			logger.Error("handling chart request", slog.Any("error", err))
+			http.Error(w, "unable to encode data points", http.StatusInternalServerError)
 			return
 		}
 	}

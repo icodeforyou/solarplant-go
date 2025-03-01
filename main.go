@@ -29,16 +29,19 @@ func main() {
 		TimeFormat: time.RFC3339,
 	})
 
-	db, err := database.New(ctx, slog.New(consolHandler), config.Database.Path, config.Database.GetRetentionDays())
+	db, err := database.New(ctx, config.Database.Path, config.Database.GetRetentionDays())
 	if err != nil {
 		panic(err)
 	}
 	defer db.Close()
 
-	dbHandler := logging.NewSQLiteHandler(db, config.Logging.GetDbLevel(), config.Logging.GetDbAttrsFormat())
-	logger := slog.New(logging.NewMultiHandler(consolHandler, dbHandler))
+	logger := slog.New(logging.NewMultiHandler(
+		consolHandler,
+		logging.NewSQLiteHandler(db, config.Logging.GetDbLevel(), config.Logging.GetDbAttrsFormat())))
 	slog.SetDefault(logger)
-	db.SetLogger(slog.Default())
+
+	// Now we can use the logger to log database operations into the database itself
+	db.SetLogger(logger.With("module", "database"))
 
 	fa := ferroamp.New(
 		config.Ferroamp.Host,
@@ -65,12 +68,7 @@ func main() {
 	}
 	defer fa.Disconnect()
 
-	tasks := task.NewTasks(
-		logger,
-		db,
-		elprisetjustnu.New(config.EnergyPrice.Area),
-		faData,
-		config)
+	tasks := task.NewTasks(db, elprisetjustnu.New(config.EnergyPrice.Area), faData, config)
 	tasks.Run()
 	defer tasks.Stop()
 
@@ -113,6 +111,6 @@ func main() {
 		}
 	}()
 
-	server := www.StartServer(logger, config.Api, db, tasks, faData)
+	server := www.StartServer(db, tasks, faData, config.Api)
 	server.Run(ctx)
 }

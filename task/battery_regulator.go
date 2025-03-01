@@ -71,6 +71,7 @@ func NewBatteryRegulator(
 
 func (br *BatteryRegulator) Run(ctx context.Context) {
 	br.logger.Debug("starting battery regulator", slog.Any("interval", br.strategy.Interval))
+
 	go func() {
 		br.logger.Debug("waiting for system to stabilize")
 		time.Sleep(time.Second * 60)
@@ -81,20 +82,20 @@ func (br *BatteryRegulator) Run(ctx context.Context) {
 				ticker.Stop()
 				return
 			case <-ticker.C:
-				br.adjustLoad()
+				br.adjustLoad(ctx)
 			}
 		}
 	}()
 }
 
-func (br *BatteryRegulator) adjustLoad() {
+func (br *BatteryRegulator) adjustLoad(ctx context.Context) {
 	gridPwr := br.faData.GridPower()
 	battLvl := br.faData.BatteryLevel()
 	battPwr := br.faData.BatteryPower()
 	battStatus := br.faData.BatteryStatuses()
 
 	hour := hours.FromNow()
-	planning, err := br.db.GetPlanningForHour(hour)
+	planning, err := br.db.GetPlanningForHour(ctx, hour)
 	if err != nil {
 		planning = database.PlanningRow{
 			When:     hour,

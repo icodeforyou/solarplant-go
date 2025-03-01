@@ -1,6 +1,7 @@
 package www
 
 import (
+	"log/slog"
 	"net/http"
 
 	_ "embed"
@@ -10,24 +11,31 @@ import (
 	"github.com/angas/solarplant-go/hours"
 )
 
-func NewPlanningHandler(config config.AppConfigApi, db *database.Database, tm *TemplateManager, task func()) http.HandlerFunc {
+func NewPlanningHandler(logger *slog.Logger, config config.AppConfigApi, db *database.Database, tm *TemplateManager, task func()) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			w.Header().Set("Content-Type", "text/html")
 			from := hours.FromNow().Sub(intOrDefault(r.URL, "hours", 24))
-			ts, err := db.GetPlanningFrom(from)
+
+			ts, err := db.GetPlanningFrom(r.Context(), from)
 			if err != nil {
+				logger.Error("handling planning get request", slog.Any("error", err))
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
 			if err := tm.ExecuteToWriter("planning.html", ts, &w); err != nil {
+				logger.Error("handling planning get request", slog.Any("error", err))
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+
 		case http.MethodPost:
+			logger.Debug("handling planning post request...")
 			task()
+			w.WriteHeader(http.StatusAccepted)
+
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}

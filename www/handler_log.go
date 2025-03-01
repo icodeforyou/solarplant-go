@@ -11,7 +11,7 @@ import (
 	"github.com/angas/solarplant-go/database"
 )
 
-func NewLogHandler(config config.AppConfigApi, db *database.Database, tm *TemplateManager) http.HandlerFunc {
+func NewLogHandler(logger *slog.Logger, config config.AppConfigApi, db *database.Database, tm *TemplateManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -28,6 +28,7 @@ func NewLogHandler(config config.AppConfigApi, db *database.Database, tm *Templa
 
 			e, err := db.GetLogEntries(r.Context(), slog.LevelDebug, page, pageSize)
 			if err != nil {
+				logger.Error("handling log request", slog.Any("error", err))
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -43,10 +44,12 @@ func NewLogHandler(config config.AppConfigApi, db *database.Database, tm *Templa
 			}
 
 			if err := tm.ExecuteToWriter("log_entries.html", data, &w); err != nil {
+				logger.Error("handling log request", slog.Any("error", err))
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		} else {
 			if err := tm.ExecuteToWriter("log.html", nil, &w); err != nil {
+				logger.Error("handling log request", slog.Any("error", err))
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		}

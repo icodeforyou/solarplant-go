@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log/slog"
+	"fmt"
 
 	"github.com/angas/solarplant-go/ferroamp"
 	"github.com/angas/solarplant-go/hours"
@@ -19,28 +19,34 @@ func (r FaSnapshotRow) IsZero() bool {
 	return r.When.IsZero()
 }
 
-func (d *Database) SaveFaSnapshot(row FaSnapshotRow) {
+func (d *Database) SaveFaSnapshot(ctx context.Context, row FaSnapshotRow) error {
 	d.logger.Debug("saving ferroamp snapshot", "hour", row.When)
 
-	jsonData, err := json.Marshal(row.Data)
-	panicOnError(err, "marshalling FaData to JSON")
+	data, err := json.Marshal(row.Data)
+	if err != nil {
+		return fmt.Errorf("marshalling ferroamp snapshot to JSON: %w", err)
+	}
 
-	_, err = d.write.Exec(`
+	_, err = d.write.ExecContext(ctx, `
 		INSERT INTO fa_snapshot (date, hour, data)
 		VALUES (?, ?, ?)`,
 		row.When.Date,
 		row.When.Hour,
-		jsonData,
+		data,
 	)
-	panicOnError(err, "saving time series") // TODO: Handle this error properly instead of panicking
+	if err != nil {
+		return fmt.Errorf("saving ferroamp snapshot: %w", err)
+	}
+
+	return nil
 }
 
-func (d *Database) GetFaSnapshotForHour(from hours.DateHour) (FaSnapshotRow, error) {
-	row := d.read.QueryRow(`
+func (d *Database) GetFaSnapshotForHour(ctx context.Context, dh hours.DateHour) (FaSnapshotRow, error) {
+	row := d.read.QueryRowContext(ctx, `
 		SELECT date, hour, data
 		FROM fa_snapshot
 		WHERE date = ? AND hour = ?`,
-		from.Date, from.Hour)
+		dh.Date, dh.Hour)
 
 	var jsonData string
 	var fs FaSnapshotRow
@@ -49,13 +55,12 @@ func (d *Database) GetFaSnapshotForHour(from hours.DateHour) (FaSnapshotRow, err
 		return FaSnapshotRow{}, nil
 	}
 	if err != nil {
-		return FaSnapshotRow{}, err
+		return FaSnapshotRow{}, fmt.Errorf("fetching ferroamp snapshot for %s: %w", dh, err)
 	}
 
 	err = json.Unmarshal([]byte(jsonData), &fs.Data)
 	if err != nil {
-		d.logger.Error("error when unmarshalling FaData from JSON", slog.Any("error", err))
-		return FaSnapshotRow{}, err
+		return FaSnapshotRow{}, fmt.Errorf("unmarshalling ferroamp snapshot from JSON: %w", err)
 	}
 
 	return fs, nil

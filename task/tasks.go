@@ -23,21 +23,21 @@ type Tasks struct {
 }
 
 func NewTasks(
-	logger *slog.Logger,
 	db *database.Database,
 	epFetcher types.EnergyPriceFetcher,
 	faData *ferroamp.FaInMemData,
 	cnfg *config.AppConfig,
 ) *Tasks {
+	logger := slog.Default().With("module", "tasks")
 	return &Tasks{
 		cron:                cron.New(),
 		cnfg:                cnfg,
-		WeatherForecastTask: NewWeatcherForcastTask(logger, db, cnfg.WeatherForecast),
-		EnergyForecastTask:  NewEnergyForecastTask(logger, db, cnfg.EnergyForecast),
-		EnergyPriceTask:     NewEnergyPriceTask(logger, db, epFetcher),
-		TimeSeriesTask:      NewTimeSeriesTask(logger, db, faData),
-		PlanningTask:        NewPlanningTask(logger, db, cnfg, faData),
-		MaintenanceTask:     NewMaintenanceTask(logger, db, cnfg),
+		WeatherForecastTask: NewWeatcherForcastTask(logger.With(slog.String("task", "weather_forecast")), db, cnfg.WeatherForecast),
+		EnergyForecastTask:  NewEnergyForecastTask(logger.With(slog.String("task", "energy_forecast")), db, cnfg.EnergyForecast),
+		EnergyPriceTask:     NewEnergyPriceTask(logger.With(slog.String("task", "energy_price")), db, epFetcher),
+		TimeSeriesTask:      NewTimeSeriesTask(logger.With(slog.String("task", "time_series")), db, faData),
+		PlanningTask:        NewPlanningTask(logger.With(slog.String("task", "planning")), db, cnfg, faData),
+		MaintenanceTask:     NewMaintenanceTask(logger.With(slog.String("task", "maintenance")), db, cnfg),
 	}
 }
 
