@@ -32,7 +32,7 @@ func NewEnergyPriceHandler(logger *slog.Logger, config config.AppConfigApi, db *
 			}
 
 		case http.MethodPost:
-			task()
+			go task()
 			w.WriteHeader(http.StatusAccepted)
 
 		default:

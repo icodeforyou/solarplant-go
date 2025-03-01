@@ -54,7 +54,7 @@ func NewTimeSeriesHandler(logger *slog.Logger, config config.AppConfigApi, db *d
 				return
 			}
 		case http.MethodPost:
-			task()
+			go task()
 			w.WriteHeader(http.StatusAccepted)
 
 		default:

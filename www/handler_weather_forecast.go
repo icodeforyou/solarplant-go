@@ -32,7 +32,7 @@ func NewWeatherForecastHandler(logger *slog.Logger, config config.AppConfigApi, 
 			}
 
 		case http.MethodPost:
-			task()
+			go task()
 			w.WriteHeader(http.StatusAccepted)
 
 		default:

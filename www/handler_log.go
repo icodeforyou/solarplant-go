@@ -13,11 +13,6 @@ import (
 
 func NewLogHandler(logger *slog.Logger, config config.AppConfigApi, db *database.Database, tm *TemplateManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
 		w.Header().Set("Content-Type", "text/html")
 
 		if page, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil && page > 0 {

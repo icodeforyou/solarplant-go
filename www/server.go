@@ -49,62 +49,52 @@ func StartServer(db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemD
 
 	go s.hub.Run()
 
-	logReqMW := func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			s.logger.Debug("http request",
-				slog.String("method", r.Method),
-				slog.String("url", r.URL.String()),
-				slog.String("remoteAddr", r.RemoteAddr))
-			next.ServeHTTP(w, r)
-		})
-	}
-
 	http.Handle("/", staticFilesHandler(config.WwwDir))
 
-	http.Handle("/time_series", logReqMW(NewTimeSeriesHandler(
+	http.Handle("/time_series", NewTimeSeriesHandler(
 		logger.With(slog.String("handler", "time_series")),
 		s.config,
 		s.db,
 		s.tm,
-		tasks.TimeSeriesTask)))
+		tasks.TimeSeriesTask))
 
-	http.Handle("/energy_price", logReqMW(NewEnergyPriceHandler(
+	http.Handle("/energy_price", NewEnergyPriceHandler(
 		logger.With(slog.String("handler", "time_series")),
 		s.config,
 		s.db,
 		s.tm,
-		tasks.EnergyPriceTask)))
+		tasks.EnergyPriceTask))
 
-	http.Handle("/weather_forecast", logReqMW(NewWeatherForecastHandler(
+	http.Handle("/weather_forecast", NewWeatherForecastHandler(
 		logger.With(slog.String("handler", "time_series")),
 		s.config,
 		s.db,
 		s.tm,
-		tasks.WeatherForecastTask)))
+		tasks.WeatherForecastTask))
 
-	http.Handle("/energy_forecast", logReqMW(NewEnergyForecastHandler(
+	http.Handle("/energy_forecast", NewEnergyForecastHandler(
 		logger.With(slog.String("handler", "time_series")),
 		s.config,
 		s.db,
 		s.tm,
-		tasks.EnergyForecastTask)))
+		tasks.EnergyForecastTask))
 
-	http.Handle("/planning", logReqMW(NewPlanningHandler(
+	http.Handle("/planning", NewPlanningHandler(
 		logger.With(slog.String("handler", "time_series")),
 		s.config,
 		s.db,
 		s.tm,
-		tasks.PlanningTask)))
+		tasks.PlanningTask))
 
-	http.Handle("/log", logReqMW(NewLogHandler(logger.With(
+	http.Handle("GET /log", NewLogHandler(logger.With(
 		slog.String("handler", "time_series")),
 		s.config,
 		s.db,
-		s.tm)))
+		s.tm))
 
-	http.Handle("/chart", logReqMW(NewChartHandler(
+	http.Handle("GET /chart", NewChartHandler(
 		logger.With(slog.String("handler", "time_series")),
-		s.db)))
+		s.db))
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		name := r.Header.Get("User-Agent")
@@ -113,6 +103,7 @@ func StartServer(db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemD
 			s.logger.Error("new websocket client failed", slog.Any("error", err))
 			return
 		}
+
 		s.hub.Register <- client
 		go client.WritePump()
 	})
@@ -122,8 +113,17 @@ func StartServer(db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemD
 
 func (s *Server) Run(ctx context.Context) {
 	s.logger.Info("staring server...", "port", s.config.Port)
+
 	srv := &http.Server{
 		Addr: fmt.Sprintf(":%d", s.config.Port),
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			s.logger.Debug("http request",
+				slog.String("method", r.Method),
+				slog.String("url", r.URL.String()),
+				slog.String("remoteAddr", r.RemoteAddr))
+
+			http.DefaultServeMux.ServeHTTP(w, r)
+		}),
 	}
 
 	srvErrors := make(chan error, 1)

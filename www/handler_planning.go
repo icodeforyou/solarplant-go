@@ -32,8 +32,7 @@ func NewPlanningHandler(logger *slog.Logger, config config.AppConfigApi, db *dat
 			}
 
 		case http.MethodPost:
-			logger.Debug("handling planning post request...")
-			task()
+			go task()
 			w.WriteHeader(http.StatusAccepted)
 
 		default:

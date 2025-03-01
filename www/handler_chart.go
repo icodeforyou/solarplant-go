@@ -13,11 +13,6 @@ import (
 
 func NewChartHandler(logger *slog.Logger, db *database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
 		midnight := hours.FromMidnight()
 
 		timeSeries, err := db.GetTimeSeriesSinceHour(midnight)
@@ -52,7 +47,7 @@ func NewChartHandler(logger *slog.Logger, db *database.Database) http.HandlerFun
 
 		// Chart 1: Battery Level and Energy Price
 		chart1 := chartjs.NewChart("")
-		for i := 0; i < chartjs.NoOfHours; i++ {
+		for i := range chartjs.NoOfHours {
 			if ts := findTs(midnight.Add(i)); ts.When.IsZero() {
 				chart1.Data.Datasets[0].Data[i] = nil
 			} else {
@@ -73,7 +68,7 @@ func NewChartHandler(logger *slog.Logger, db *database.Database) http.HandlerFun
 		// Chart 2: Energy Production and Consumption
 		chart2 := chartjs.NewChart("")
 		maxVal := 0.0
-		for i := 0; i < chartjs.NoOfHours; i++ {
+		for i := range chartjs.NoOfHours {
 			if ts := findTs(midnight.Add(i)); ts.When.IsZero() {
 				chart2.Data.Datasets[0].Data[i] = nil
 				chart2.Data.Datasets[1].Data[i] = nil

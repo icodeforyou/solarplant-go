@@ -32,7 +32,7 @@ func NewEnergyForecastHandler(logger *slog.Logger, config config.AppConfigApi, d
 			}
 
 		case http.MethodPost:
-			task()
+			go task()
 			w.WriteHeader(http.StatusAccepted)
 
 		default:
