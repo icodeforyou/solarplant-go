@@ -8,7 +8,6 @@ import (
 	"github.com/angas/solarplant-go/config"
 	"github.com/angas/solarplant-go/database"
 	"github.com/angas/solarplant-go/hours"
-	"github.com/angas/solarplant-go/slice"
 	"github.com/angas/solarplant-go/smhi"
 )
 
@@ -38,7 +37,16 @@ func runForcastTask(logger *slog.Logger, db *database.Database, config config.Ap
 	if err != nil {
 		logger.Error("weather forecast task error", slog.Any("error", err))
 	} else {
-		if err = db.SaveForcast(ctx, slice.Map(fc, toWeatherForecastRow)); err != nil {
+		rows := make([]database.WeatherForecastRow, len(fc))
+		for i, ep := range fc {
+			rows[i] = database.WeatherForecastRow{
+				When:          hours.FromTime(ep.Hour),
+				CloudCover:    ep.CloudCover,
+				Temperature:   ep.Temperature,
+				Precipitation: ep.Precipitation,
+			}
+		}
+		if err = db.SaveForcast(ctx, rows); err != nil {
 			logger.Error("weather forecast task error", slog.Any("error", err))
 		}
 	}
@@ -52,14 +60,4 @@ func needImmediateForcastUpdate(ctx context.Context, db *database.Database) bool
 		return true
 	}
 	return false
-}
-
-func toWeatherForecastRow(ep smhi.WetherForecast) database.WeatherForecastRow {
-	dh := hours.FromTime(ep.Hour)
-	return database.WeatherForecastRow{
-		When:          dh,
-		CloudCover:    ep.CloudCover,
-		Temperature:   ep.Temperature,
-		Precipitation: ep.Precipitation,
-	}
 }

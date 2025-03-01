@@ -3,13 +3,13 @@ package www
 import (
 	"log/slog"
 	"net/http"
+	"slices"
 
 	_ "embed"
 
 	"github.com/angas/solarplant-go/config"
 	"github.com/angas/solarplant-go/database"
 	"github.com/angas/solarplant-go/hours"
-	"github.com/angas/solarplant-go/slice"
 )
 
 type templateRow struct {
@@ -41,9 +41,9 @@ func NewTimeSeriesHandler(logger *slog.Logger, config config.AppConfigApi, db *d
 			var rows []templateRow
 			for _, row := range ts {
 				strategy := ""
-				pl, found := slice.Find(pls, func(p database.PlanningRow) bool { return p.When == row.When })
-				if found {
-					strategy = pl.Strategy
+				idx := slices.IndexFunc(pls, func(p database.PlanningRow) bool { return p.When == row.When })
+				if idx != -1 {
+					strategy = pls[idx].Strategy
 				}
 				rows = append(rows, templateRow{row, strategy})
 			}
