@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -64,11 +65,15 @@ func main() {
 		}
 	}
 
-	if err := fa.Connect(); err != nil {
-		logger.Error("ferroamp disconnected, terminating...", slog.Any("error", err))
-		os.Exit(1)
+	if isDevMode() {
+		logger.Info("dev mode, skipping ferroamp connection")
+	} else {
+		if err := fa.Connect(); err != nil {
+			logger.Error("ferroamp disconnected, terminating...", slog.Any("error", err))
+			os.Exit(1)
+		}
+		defer fa.Disconnect()
 	}
-	defer fa.Disconnect()
 
 	energyPriceProviders := []types.EnergyPriceProvider{
 		elprisetjustnu.New(config.EnergyPrice.Area), // Primary provider
@@ -76,8 +81,12 @@ func main() {
 	}
 
 	tasks := task.NewTasks(db, energyPriceProviders, faData, config)
-	tasks.Run()
-	defer tasks.Stop()
+	if isDevMode() {
+		logger.Info("dev mode, skipping task scheduling")
+	} else {
+		tasks.Run()
+		defer tasks.Stop()
+	}
 
 	regulatorStrategy := task.BatteryRegulatorStrategy{
 		Interval:        time.Second * 10,
@@ -85,7 +94,11 @@ func main() {
 		GridMaxPower:    config.Planner.GridMaxPower,
 	}
 	batteryRegulator := task.NewBatteryRegulator(logger, db, config.BatterySpec, faData, regulatorStrategy)
-	batteryRegulator.Run(ctx)
+	if isDevMode() {
+		logger.Info("dev mode, skipping battery regulator")
+	} else {
+		batteryRegulator.Run(ctx)
+	}
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
@@ -120,4 +133,8 @@ func main() {
 
 	server := www.StartServer(db, tasks, faData, config.Api)
 	server.Run(ctx)
+}
+
+func isDevMode() bool {
+	return strings.EqualFold(os.Getenv("APP_ENV"), "development")
 }
