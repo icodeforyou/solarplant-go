@@ -51,12 +51,11 @@ func StartServer(db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemD
 
 	http.Handle("/", staticFilesHandler(config.WwwDir))
 
-	http.Handle("/time_series", NewTimeSeriesHandler(
+	http.Handle("GET /time_series", NewTimeSeriesHandler(
 		logger.With(slog.String("handler", "time_series")),
 		s.config,
 		s.db,
-		s.tm,
-		tasks.TimeSeriesTask))
+		s.tm))
 
 	http.Handle("/energy_price", NewEnergyPriceHandler(
 		logger.With(slog.String("handler", "time_series")),

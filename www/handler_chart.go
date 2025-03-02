@@ -15,7 +15,7 @@ func NewChartHandler(logger *slog.Logger, db *database.Database) http.HandlerFun
 	return func(w http.ResponseWriter, r *http.Request) {
 		midnight := hours.FromMidnight()
 
-		timeSeries, err := db.GetTimeSeriesSinceHour(midnight)
+		timeSeries, err := db.GetTimeSeriesSinceHour(r.Context(), midnight)
 		if err != nil {
 			logger.Error("handling chart request", slog.Any("error", err))
 			http.Error(w, err.Error(), http.StatusInternalServerError)

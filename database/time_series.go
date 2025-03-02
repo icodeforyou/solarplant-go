@@ -22,12 +22,6 @@ type TimeSeriesRow struct {
 	BatteryNetLoad     float64
 }
 
-type TimeSeriesWithEstimationsRow struct {
-	TimeSeriesRow
-	EstimatedConsumption sql.NullFloat64
-	EstimatedProduction  sql.NullFloat64
-}
-
 func (d *Database) SaveTimeSeries(ctx context.Context, row TimeSeriesRow) error {
 	d.logger.Debug("saving time series",
 		"hour", row.When,
@@ -108,8 +102,8 @@ func (d *Database) GetTimeSeriesForHour(ctx context.Context, dh hours.DateHour) 
 	return ts, nil
 }
 
-func (d *Database) GetTimeSeriesSinceHour(dh hours.DateHour) ([]TimeSeriesRow, error) {
-	rows, err := d.read.Query(`
+func (d *Database) GetTimeSeriesSinceHour(ctx context.Context, dh hours.DateHour) ([]TimeSeriesRow, error) {
+	rows, err := d.read.QueryContext(ctx, `
 		SELECT 
 			date, 
 			hour, 
@@ -123,7 +117,7 @@ func (d *Database) GetTimeSeriesSinceHour(dh hours.DateHour) ([]TimeSeriesRow, e
 			battery_level, 
 			battery_net_load
 		FROM time_series
-		WHERE date >= ? AND hour >= ?
+		WHERE (date >= ? AND hour >= ?) OR (date > ?)
 		ORDER BY date, hour ASC`,
 		dh.Date, dh.Hour, dh.Date)
 	if err != nil {
@@ -135,61 +129,6 @@ func (d *Database) GetTimeSeriesSinceHour(dh hours.DateHour) ([]TimeSeriesRow, e
 	ts, err := scanTimeSeriesHours(rows)
 	if err != nil {
 		return ts, fmt.Errorf("scanning time series row: %w", err)
-	}
-
-	return ts, nil
-}
-
-func (d *Database) GetTimeSeriesWithEstimationsHour(ctx context.Context, dh hours.DateHour) ([]TimeSeriesWithEstimationsRow, error) {
-	rows, err := d.read.QueryContext(ctx, `
-		SELECT 
-			ts.date,
-			ts.hour,
-			ts.cloud_cover,
-			ts.temperature,
-			ts.precipitation,
-			ts.energy_price,
-			ts.consumption,
-			ef.consumption AS estimated_consumption,
-			ts.production,
-			ts.production_lifetime,
-			ef.production AS estimated_production,
-			ts.battery_level,
-			ts.battery_net_load
-		FROM time_series ts
-			LEFT OUTER JOIN energy_forecast ef ON ef.date = ts.date AND ef.hour = ts.hour
-		WHERE (ts.date > ?)
-			OR (ts.date = ? AND ts.hour >= ?)
-		ORDER BY ts.date, ts.hour ASC`,
-		dh.Date, dh.Date, dh.Hour)
-	if err != nil {
-		return nil, fmt.Errorf("fetching time series with estimations for %s: %w", dh, err)
-	}
-
-	defer rows.Close()
-
-	var ts []TimeSeriesWithEstimationsRow
-	for rows.Next() {
-		var t TimeSeriesWithEstimationsRow
-		err := rows.Scan(
-			&t.When.Date,
-			&t.When.Hour,
-			&t.CloudCover,
-			&t.Temperature,
-			&t.Precipitation,
-			&t.EnergyPrice,
-			&t.Consumption,
-			&t.EstimatedConsumption,
-			&t.Production,
-			&t.ProductionLifetime,
-			&t.EstimatedProduction,
-			&t.BatteryLevel,
-			&t.BatteryNetLoad)
-		if err != nil {
-			return nil, fmt.Errorf("scanning time series with estimations row: %w", err)
-		}
-
-		ts = append(ts, t)
 	}
 
 	return ts, nil

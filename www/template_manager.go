@@ -33,6 +33,9 @@ type TemplateManager struct {
 }
 
 var funcMap = template.FuncMap{
+	"Flt64ToStr": func(f float64) string {
+		return fmt.Sprintf("%.2f", f)
+	},
 	"NullFloat64": func(n sql.NullFloat64) string {
 		if n.Valid {
 			return fmt.Sprintf("%.2f", n.Float64)
@@ -44,15 +47,6 @@ var funcMap = template.FuncMap{
 	},
 	"TwoDecimals": func(n float64) string {
 		return fmt.Sprintf("%.2f", n)
-	},
-	"Flt64ToStr": func(f float64) string {
-		return fmt.Sprintf("%.2f", f)
-	},
-	"NullFlt64ToStr": func(n sql.NullFloat64) string {
-		if n.Valid {
-			return fmt.Sprintf("%.2f", n.Float64)
-		}
-		return "-"
 	},
 	"Subtract": func(a, b int) int { return a - b },
 }
