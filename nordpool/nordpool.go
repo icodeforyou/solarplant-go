@@ -13,6 +13,15 @@ import (
 	"github.com/angas/solarplant-go/types"
 )
 
+type nordpoolData struct {
+	Version          int `json:"version"`
+	MultiAreaEntries []struct {
+		DeliveryStart time.Time          `json:"deliveryStart"`
+		DeliveryEnd   time.Time          `json:"deliveryEnd"`
+		EntryPerArea  map[string]float64 `json:"entryPerArea"`
+	} `json:"multiAreaEntries"`
+}
+
 type Nordpool struct {
 	area string
 }
@@ -29,6 +38,10 @@ func (n Nordpool) GetEnergyPrices(ctx context.Context) ([]types.EnergyPrice, err
 		return nil, fmt.Errorf("failed to fetch prices from nordpool for today: %w", err)
 	}
 
+	if t.Before(time.Date(t.Year(), t.Month(), t.Day(), 14, 15, 0, 0, time.Local)) {
+		return today, nil
+	}
+
 	tomorrow, err := n.getEnergyPrices(ctx, t.AddDate(0, 0, 1))
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch prices from nordpool for tomorrow: %w", err)
@@ -38,19 +51,19 @@ func (n Nordpool) GetEnergyPrices(ctx context.Context) ([]types.EnergyPrice, err
 }
 
 func (n Nordpool) getEnergyPrices(ctx context.Context, date time.Time) ([]types.EnergyPrice, error) {
-	url := fmt.Sprintf("%s/api/DayAheadPrices?date=%s&market=DayAhead&deliveryArea=AT,%s&currency=SEK",
+	url := fmt.Sprintf("%s/api/DayAheadPrices?date=%s&market=DayAhead&deliveryArea=%s&currency=SEK",
 		"https://dataportal-api.nordpoolgroup.com",
 		date.Format("2006-01-02"),
 		n.area)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, fmt.Errorf("failed to create nordpool request: %w", err)
 	}
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch prices: %w", err)
+		return nil, fmt.Errorf("failed to fetch nordpool prices: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -58,17 +71,21 @@ func (n Nordpool) getEnergyPrices(ctx context.Context, date time.Time) ([]types.
 		return []types.EnergyPrice{}, nil
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	if resp.StatusCode == http.StatusNoContent {
+		return []types.EnergyPrice{}, nil
 	}
 
-	var nordpoolData nordpoolData
-	if err := json.NewDecoder(resp.Body).Decode(&nordpoolData); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code from nordpool: %d", resp.StatusCode)
+	}
+
+	var data nordpoolData
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, fmt.Errorf("failed to decode nordpool response: %w", err)
 	}
 
 	prices := make([]types.EnergyPrice, 0)
-	for _, entry := range nordpoolData.MultiAreaEntries {
+	for _, entry := range data.MultiAreaEntries {
 		hour := hours.FromTime(entry.DeliveryStart)
 		if slices.ContainsFunc(prices, func(p types.EnergyPrice) bool { return p.Hour == hour }) {
 			continue

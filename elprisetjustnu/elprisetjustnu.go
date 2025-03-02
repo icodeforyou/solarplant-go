@@ -35,6 +35,10 @@ func (e ElPrisetJustNu) GetEnergyPrices(ctx context.Context) ([]types.EnergyPric
 		return nil, fmt.Errorf("failed to fetch prices from elprisetjustnu for today: %w", err)
 	}
 
+	if t.Before(time.Date(t.Year(), t.Month(), t.Day(), 14, 15, 0, 0, time.Local)) {
+		return today, nil
+	}
+
 	t = t.AddDate(0, 0, 1)
 	tomorrow, err := e.getEnergyPrices(ctx, t.Year(), int(t.Month()), t.Day())
 	if err != nil {
