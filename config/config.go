@@ -49,7 +49,6 @@ type AppConfigEnergyPrice struct {
 	TaxReduction float64 `mapstructure:"tax_reduction"`     // Energy tax reduction in SEK/kWh when selling energy back to the grid
 	GridBenifit  float64 `mapstructure:"grid_benefit"`      // Grid benefit in SEK/kWh (nätnytta)
 	Area         string  `mapstructure:"area"`              // "SE1", "SE2", "SE3", "SE4"
-	Currency     string  `mapstructure:"currency"`          // "SEK"
 	RunAt        string  `mapstructure:"run_at"`
 }
 
