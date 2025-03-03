@@ -23,7 +23,6 @@ const initSQL = `
 	PRAGMA journal_mode = WAL;
 	PRAGMA synchronous = NORMAL;
 	PRAGMA temp_store = MEMORY;
-	PRAGMA mmap_size = 30000000000; -- 30GB
 	PRAGMA busy_timeout = 5000;
 	PRAGMA automatic_index = true;
 	PRAGMA foreign_keys = ON;
@@ -32,7 +31,7 @@ const initSQL = `
 `
 
 /**
- * New creates a new database connection.
+ * A new database connection.
  * Inspired by: https://theitsolutions.io/blog/modernc.org-sqlite-with-go
  */
 func New(ctx context.Context, path string, retentionDays uint) (*Database, error) {
@@ -57,7 +56,9 @@ func New(ctx context.Context, path string, retentionDays uint) (*Database, error
 	write.SetConnMaxIdleTime(time.Minute)
 
 	err = migrate(ctx, write)
-	panicOnError(err, "migrating")
+	if err != nil {
+		panic(fmt.Errorf("database migration error: %w", err))
+	}
 
 	return &Database{
 			logger:        slog.Default().With(slog.String("module", "database")),
@@ -97,10 +98,4 @@ func (d *Database) purge(ctx context.Context, table string) error {
 	}
 
 	return nil
-}
-
-func panicOnError(err error, action string) {
-	if err != nil {
-		panic(fmt.Errorf("database error when %s: %w", action, err))
-	}
 }
