@@ -36,7 +36,7 @@ func runEnergyForecastTask(logger *slog.Logger, db *database.Database, config co
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	for i := 0; i < int(config.HoursAhead); i++ {
+	for range int(config.HoursAhead) {
 		hour = hour.Add(1)
 
 		forecast, err := db.GetWeatcherForecast(ctx, hour)

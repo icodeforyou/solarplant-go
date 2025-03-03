@@ -42,12 +42,30 @@ func NewTasks(
 }
 
 func (t *Tasks) Run() {
-	t.cron.AddFunc(t.cnfg.WeatherForecast.RunAt, t.WeatherForecastTask)
-	t.cron.AddFunc(t.cnfg.EnergyForecast.RunAt, t.EnergyForecastTask)
-	t.cron.AddFunc(t.cnfg.EnergyPrice.RunAt, t.EnergyPriceTask)
-	t.cron.AddFunc("@hourly", t.TimeSeriesTask)
-	t.cron.AddFunc(t.cnfg.Planner.RunAt, t.PlanningTask)
-	t.cron.AddFunc("30 2 * * *", t.MaintenanceTask)
+	_, err := t.cron.AddFunc(t.cnfg.WeatherForecast.RunAt, t.WeatherForecastTask)
+	if err != nil {
+		panic(err)
+	}
+	_, err = t.cron.AddFunc(t.cnfg.EnergyForecast.RunAt, t.EnergyForecastTask)
+	if err != nil {
+		panic(err)
+	}
+	_, err = t.cron.AddFunc(t.cnfg.EnergyPrice.RunAt, t.EnergyPriceTask)
+	if err != nil {
+		panic(err)
+	}
+	_, err = t.cron.AddFunc("@hourly", t.TimeSeriesTask)
+	if err != nil {
+		panic(err)
+	}
+	_, err = t.cron.AddFunc(t.cnfg.Planner.RunAt, t.PlanningTask)
+	if err != nil {
+		panic(err)
+	}
+	_, err = t.cron.AddFunc("30 2 * * *", t.MaintenanceTask)
+	if err != nil {
+		panic(err)
+	}
 	t.cron.Start()
 }
 

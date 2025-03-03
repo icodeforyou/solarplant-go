@@ -10,8 +10,10 @@ import (
 )
 
 type EnergyForecastRow struct {
-	When        hours.DateHour
-	Production  float64
+	When hours.DateHour
+	/** Estimated production in kWh normalized to a situation without clouds */
+	Production float64
+	/** Estimated consumption in kWh */
 	Consumption float64
 }
 

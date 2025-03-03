@@ -63,13 +63,17 @@ func migrate(ctx context.Context, db *sql.DB) error {
 
 		_, err = tx.ExecContext(ctx, string(data))
 		if err != nil {
-			tx.Rollback()
+			if err := tx.Rollback(); err != nil {
+				return fmt.Errorf("rollback migration %d: %w", nextVer, err)
+			}
 			return fmt.Errorf("apply migration %d: %w", nextVer, err)
 		}
 
 		_, err = tx.ExecContext(ctx, fmt.Sprintf("PRAGMA user_version = %d;", nextVer))
 		if err != nil {
-			tx.Rollback()
+			if err = tx.Rollback(); err != nil {
+				return fmt.Errorf("rollback migration %d: %w", nextVer, err)
+			}
 			return fmt.Errorf("update database version for migration %d: %w", nextVer, err)
 		}
 
