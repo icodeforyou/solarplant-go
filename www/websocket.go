@@ -10,10 +10,9 @@ import (
 )
 
 const (
-	writeWait      = 10 * time.Second
-	pongWait       = 60 * time.Second
-	pingPeriod     = (pongWait * 9) / 10
-	maxMessageSize = 512
+	writeWait  = 10 * time.Second
+	pongWait   = 60 * time.Second
+	pingPeriod = (pongWait * 9) / 10
 )
 
 var upgrader = ws.Upgrader{
@@ -22,25 +21,26 @@ var upgrader = ws.Upgrader{
 }
 
 type Client struct {
+	logger *slog.Logger
 	hub    *Hub
 	conn   *ws.Conn
 	send   chan []byte
 	name   string
-	active bool
 }
 
 func NewClient(hub *Hub, w http.ResponseWriter, r *http.Request, name string) (*Client, error) {
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Client{
+		logger: hub.logger.With(slog.String("client", name)),
 		hub:    hub,
 		conn:   conn,
 		send:   make(chan []byte, 256),
 		name:   name,
-		active: true,
 	}, nil
 }
 
@@ -56,25 +56,41 @@ func (c *Client) WritePump() {
 	for {
 		select {
 		case message, ok := <-c.send:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				c.logger.Warn("web socket set write deadline failed", slog.Any("error", err))
+				return
+			}
+
 			if !ok {
-				c.conn.WriteMessage(ws.CloseMessage, []byte{})
+				if err := c.conn.WriteMessage(ws.CloseMessage, []byte{}); err != nil {
+					c.logger.Warn("web socket close message failed", slog.Any("error", err))
+				}
 				return
 			}
 
 			w, err := c.conn.NextWriter(ws.TextMessage)
 			if err != nil {
+				c.logger.Warn("web socket next writer failed", slog.Any("error", err))
 				return
 			}
-			w.Write(message)
 
-			if err := w.Close(); err != nil {
+			if _, err = w.Write(message); err != nil {
+				c.logger.Warn("web socket write failed", slog.Any("error", err))
+				return
+			}
+
+			if err = w.Close(); err != nil {
+				c.logger.Warn("web socket close failed", slog.Any("error", err))
 				return
 			}
 
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+				c.logger.Warn("web socket set write deadline failed", slog.Any("error", err))
+				return
+			}
 			if err := c.conn.WriteMessage(ws.PingMessage, nil); err != nil {
+				c.logger.Warn("web socket ping message failed", slog.Any("error", err))
 				return
 			}
 		}
@@ -122,11 +138,21 @@ func (h *Hub) Run() {
 			h.mutex.Unlock()
 
 		case message := <-h.Broadcast:
+			// Create a temporary slice of clients while holding the lock
 			h.mutex.Lock()
+			activeClients := make([]*Client, 0, len(h.clients))
 			for client := range h.clients {
-				client.send <- message
+				activeClients = append(activeClients, client)
 			}
 			h.mutex.Unlock()
+
+			for _, client := range activeClients {
+				select {
+				case client.send <- message:
+				default: // Client's channel is full, drop the message
+					h.logger.Warn("client send buffer full, dropping message", "clientName", client.name)
+				}
+			}
 		}
 	}
 }
