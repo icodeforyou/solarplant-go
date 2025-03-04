@@ -17,7 +17,7 @@
   </thead>
   <tbody>
     {{ range . }}
-    <tr{{ if .Forecast }} style="opacity: 0.5;" {{ end }}>
+    <tr {{if IsCurrentHour .When}}class="pulse" {{else if IsAfterHour .When}}class="faded" {{end}}>
       <td style="white-space: nowrap;">{{ .When.Date }} - {{ .When.Hour }}</td>
       <td>{{ .CloudCover }}</td>
       <td>{{ OneDecimal .Temperature }}</td>
@@ -30,7 +30,7 @@
       <td>{{ NullFloat64 .Production }}</td>
       <td>{{ NullFloat64 .EstimatedProduction }}</td>
       <td>{{ .Strategy }}</td>
-      </tr>
-      {{ end }}
+    </tr>
+    {{ end }}
   </tbody>
 </table>

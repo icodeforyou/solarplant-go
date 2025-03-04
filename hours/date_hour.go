@@ -53,6 +53,26 @@ func (dh DateHour) Sub(hours int) DateHour {
 	return dh.Add(-hours)
 }
 
+func (dh DateHour) Before(other DateHour) bool {
+	if dh.Date < other.Date {
+		return true
+	}
+	if dh.Date == other.Date {
+		return dh.Hour < other.Hour
+	}
+	return false
+}
+
+func (dh DateHour) After(other DateHour) bool {
+	if dh.Date > other.Date {
+		return true
+	}
+	if dh.Date == other.Date {
+		return dh.Hour > other.Hour
+	}
+	return false
+}
+
 func (dh DateHour) IsZero() bool {
 	return dh.Date == "" && dh.Hour == 0
 }

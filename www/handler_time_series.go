@@ -14,7 +14,6 @@ import (
 )
 
 type templateRow struct {
-	Forecast             bool
 	When                 hours.DateHour
 	CloudCover           uint8
 	Temperature          float64
@@ -74,7 +73,6 @@ func NewTimeSeriesHandler(logger *slog.Logger, config config.AppConfigApi, db *d
 			}
 
 			rows = append(rows, templateRow{
-				Forecast:             false,
 				When:                 ts.When,
 				CloudCover:           ts.CloudCover,
 				Temperature:          ts.Temperature,
@@ -129,7 +127,6 @@ func NewTimeSeriesHandler(logger *slog.Logger, config config.AppConfigApi, db *d
 				}
 
 				rows = append(rows, templateRow{
-					Forecast:             true,
 					When:                 ep.When,
 					CloudCover:           cloudCover,
 					Temperature:          temperature,
