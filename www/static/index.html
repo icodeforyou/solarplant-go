@@ -14,15 +14,12 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"
     integrity="sha384-T/4KgSWuZEPozpPz7rnnp/5lDSnpY1VPJCojf1S81uTHS1E38qgLfMgVsAeRCWc4"
     crossorigin="anonymous"></script>
-
-  <!--script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script-->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
   <link rel="stylesheet" href="/main.css">
   <script>
     window.addEventListener("load", () => {
-      document.querySelector("#buttons > button").click()
       fetch(`/chart`)
         .then((res) => res.json())
         .then(data => {
@@ -31,17 +28,41 @@
         })
         .catch(console.error);
     });
-
-    function setActive(buttonEl) {
-      document.querySelectorAll('button').forEach(btn => btn.classList.remove('secondary'));
-      buttonEl.classList.add('secondary');
+    function toggleMenu() {
+      document.getElementById('menu-dropdown').classList.toggle('visible');
     }
+    // Click outside menu handler
+    document.addEventListener('click', (event) => {
+      const menuContainer = document.getElementById('menu-container');
+      if (!menuContainer.contains(event.target)) {
+        document.getElementById('menu-dropdown').classList.remove('visible');
+      }
+    });
   </script>
 </head>
 
 <body>
   <main class="container-fluid">
-    <h1>Solarplant</h1>
+    <div id="header">
+      <nav id="menu-container">
+        <button id="menu-button" aria-label="Menu" onclick="toggleMenu()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <rect y="4" width="24" height="2" rx="1"></rect>
+            <rect y="11" width="24" height="2" rx="1"></rect>
+            <rect y="18" width="24" height="2" rx="1"></rect>
+          </svg>
+        </button>
+        <div id="menu-dropdown">
+          <button class="menu-item" hx-get="/timeseries" hx-target="#data" hx-on::after-request="toggleMenu()">
+            Time Series
+          </button>
+          <button class="menu-item" hx-get="/log" hx-target="#data" hx-on::after-request="toggleMenu()">
+            Log
+          </button>
+        </div>
+      </nav>
+      <h1>Solarplant</h1>
+    </div>
     <div id="top_panel">
       <div hx-ext="ws" ws-connect="/ws">
         <div id="real_time_data"></div>
@@ -53,27 +74,7 @@
         <canvas id="chart2"></canvas>
       </div>
     </div>
-    <div id="buttons" role="group">
-      <button class="outline" hx-get="/time_series" hx-target="#data" hx-on::after-request="setActive(this)">
-        Time Series
-      </button>
-      <button class="outline" hx-get="/energy_price" hx-target="#data" hx-on::after-request="setActive(this)">
-        Energy Price
-      </button>
-      <button class="outline" hx-get="/weather_forecast" hx-target="#data" hx-on::after-request="setActive(this)">
-        Weather Forecast
-      </button>
-      <button class="outline" hx-get="/energy_forecast" hx-target="#data" hx-on::after-request="setActive(this)">
-        Energy Forecast
-      </button>
-      <button class="outline" hx-get="/planning" hx-target="#data" hx-on::after-request="setActive(this)">
-        Planning
-      </button>
-      <button class="outline" hx-get="/log" hx-target="#data" hx-on::after-request="setActive(this)">
-        Log
-      </button>
-    </div>
-    <div id="data" style="margin-top: 10px;"></div>
+    <div id="data" hx-get="/timeseries" hx-trigger="load"></div>
   </main>
 </body>
 

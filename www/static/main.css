@@ -40,6 +40,70 @@ tr.faded > td {
   width: 400px;
 }
 
+#header {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 20px;
+}
+
+#menu-container {
+  position: relative;
+  display: inline-block;
+  align-items: baseline;
+}
+
+#menu-button {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  box-shadow: none;
+  span {
+    height: 3px;
+    width: 100%;
+    display: block;
+  }
+}
+
+#menu-dropdown {
+  top: 0px;
+  left: 40px;
+  position: absolute;
+  background: var(--pico-dropdown-background-color);
+  border: 1px solid var(--pico-dropdown-border-color);
+  border-radius: var(--pico-border-radius);
+  min-width: 150px;
+  z-index: 1000;
+  display: none;
+  overflow: hidden;
+}
+#menu-dropdown.visible {
+  display: block;
+}
+
+.menu-item {
+  padding: 0.75rem 1rem;
+  display: block;
+  margin: 0;
+  width: 100%;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  box-shadow: none;
+  text-align: left;
+}
+.menu-item:hover,
+.menu-item:focus {
+  color: var(--pico-primary-hover);
+  background-color: var(--pico-dropdown-hover-background-color);
+}
+
 @keyframes pulse {
   0% {
     opacity: 0.5;

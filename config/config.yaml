@@ -1,7 +1,7 @@
 api:
   address: localhost
   port: 8080
-  #www_dir: ./www_ext
+  www_dir: ./www
 
 database:
   path: ./data/solarplant.db

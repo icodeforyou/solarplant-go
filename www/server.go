@@ -51,48 +51,20 @@ func StartServer(db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemD
 
 	http.Handle("/", staticFilesHandler(config.WwwDir))
 
-	http.Handle("GET /time_series", NewTimeSeriesHandler(
-		logger.With(slog.String("handler", "time_series")),
+	http.Handle("GET /timeseries", NewTimeSeriesHandler(
+		logger.With(slog.String("handler", "timeseries")),
 		s.config,
 		s.db,
 		s.tm))
 
-	http.Handle("/energy_price", NewEnergyPriceHandler(
-		logger.With(slog.String("handler", "time_series")),
-		s.config,
-		s.db,
-		s.tm,
-		tasks.EnergyPriceTask))
-
-	http.Handle("/weather_forecast", NewWeatherForecastHandler(
-		logger.With(slog.String("handler", "time_series")),
-		s.config,
-		s.db,
-		s.tm,
-		tasks.WeatherForecastTask))
-
-	http.Handle("/energy_forecast", NewEnergyForecastHandler(
-		logger.With(slog.String("handler", "time_series")),
-		s.config,
-		s.db,
-		s.tm,
-		tasks.EnergyForecastTask))
-
-	http.Handle("/planning", NewPlanningHandler(
-		logger.With(slog.String("handler", "time_series")),
-		s.config,
-		s.db,
-		s.tm,
-		tasks.PlanningTask))
-
 	http.Handle("GET /log", NewLogHandler(logger.With(
-		slog.String("handler", "time_series")),
+		slog.String("handler", "log")),
 		s.config,
 		s.db,
 		s.tm))
 
 	http.Handle("GET /chart", NewChartHandler(
-		logger.With(slog.String("handler", "time_series")),
+		logger.With(slog.String("handler", "chart")),
 		s.db))
 
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
