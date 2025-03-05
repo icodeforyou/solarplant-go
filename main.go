@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -19,6 +20,11 @@ import (
 	"github.com/angas/solarplant-go/types"
 	"github.com/angas/solarplant-go/www"
 	"github.com/lmittmann/tint"
+)
+
+var (
+	CommitHash = "n/a"
+	BuildTime  = "n/a"
 )
 
 func main() {
@@ -131,7 +137,8 @@ func main() {
 		}
 	}()
 
-	server := www.StartServer(db, tasks, faData, config.Api)
+	sysInfo := www.SysInfo{CommitHash: CommitHash, BuildTime: BuildTime, RuntimeVersion: runtime.Version()}
+	server := www.StartServer(db, tasks, faData, config.Api, sysInfo)
 	server.Run(ctx)
 }
 

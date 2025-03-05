@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-go build -o ./bin/solarplant ./main.go
+./build.sh
 
 set -a
 source .env

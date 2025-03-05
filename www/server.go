@@ -19,6 +19,12 @@ import (
 	"github.com/angas/solarplant-go/task"
 )
 
+type SysInfo struct {
+	CommitHash     string
+	BuildTime      string
+	RuntimeVersion string
+}
+
 type Server struct {
 	logger *slog.Logger
 	config config.AppConfigApi
@@ -31,7 +37,7 @@ type Server struct {
 //go:embed static
 var embeddedStaticDir embed.FS
 
-func StartServer(db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemData, config config.AppConfigApi) *Server {
+func StartServer(db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemData, config config.AppConfigApi, sysInfo SysInfo) *Server {
 	logger := slog.Default().With("module", "www")
 	tm, err := NewTemplateManager(logger, config.WwwDir)
 	if err != nil {
@@ -50,6 +56,11 @@ func StartServer(db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemD
 	go s.hub.Run()
 
 	http.Handle("/", staticFilesHandler(config.WwwDir))
+
+	http.Handle("GET /sysinfo", NewSysInfoHandler(
+		logger.With(slog.String("handler", "timeseries")),
+		s.tm,
+		sysInfo))
 
 	http.Handle("GET /timeseries", NewTimeSeriesHandler(
 		logger.With(slog.String("handler", "timeseries")),
