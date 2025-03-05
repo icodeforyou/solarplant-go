@@ -110,6 +110,11 @@ table {
   font-size: small;
 }
 
+th {
+  background-color: var(--panel-bg);
+  font-weight: bold;
+}
+
 th,
 td {
   border: 1px solid var(--border-color);
@@ -117,7 +122,7 @@ td {
   text-align: left;
 }
 
-tr:hover {
+tbody > tr:hover {
   background-color: var(--panel-bg);
 }
 
@@ -128,6 +133,10 @@ tr.pulse > td {
 
 tr.faded > td {
   opacity: 0.5;
+}
+
+#real_time_data td:first-child {
+  font-weight: bold;
 }
 
 #dashboard {
@@ -142,7 +151,7 @@ tr.faded > td {
 }
 
 .chart_container {
-  height: 200px;
+  height: 100%;
   width: 400px;
 }
 
