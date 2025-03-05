@@ -1,50 +1,50 @@
-button {
-  --pico-form-element-spacing-vertical: 0.25rem;
-  --pico-form-element-spacing-horozontal: 0.25rem;
+:root {
+  --bg-color: #f8f9fa;
+  --text-color: #202124;
+  --panel-bg: #ffffff;
+  --border-color: #dadce0;
+  --highlight-color: #e64a19;
+  --padding: 20px;
+  --box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: small;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --panel-bg: #1e1e1e;
+    --border-color: #333333;
+    --highlight-color: #ff6e40;
+    --box-shadow: 0 2px 5px rgba(128, 128, 128, 0.2);
+  }
 }
 
-th,
-td {
-  border: 1px solid rgb(75, 75, 75);
-  padding: 5px;
-  text-align: left;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-tr.pulse > td {
-  animation: pulse 1.5s ease-in-out infinite;
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.5;
 }
 
-tr.faded > td {
-  opacity: 0.5;
-}
-
-#top_panel {
+header {
   display: flex;
   flex-direction: row;
-  gap: 20px;
-  padding-bottom: 20px;
+  align-items: center;
+  gap: var(--padding);
+  padding: 10px var(--padding);
 }
 
-#real_time_data {
-  min-width: 300px;
-}
-
-#chart_container {
-  height: 200px;
-  width: 400px;
-}
-
-#header {
+main {
   display: flex;
-  flex-direction: row;
-  align-items: baseline;
-  gap: 20px;
+  flex-direction: column;
+  padding: 0 var(--padding);
 }
 
 #menu-container {
@@ -54,7 +54,6 @@ tr.faded > td {
 }
 
 #menu-button {
-  color: var(--pico-primary-color);
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -64,34 +63,34 @@ tr.faded > td {
   outline: none;
   background: none;
   box-shadow: none;
-  span {
-    height: 3px;
-    width: 100%;
-    display: block;
+  svg {
+    fill: var(--text-color);
   }
 }
 
 #menu-dropdown {
-  top: 0px;
-  left: 40px;
   position: absolute;
-  background: var(--pico-dropdown-background-color);
-  border: 1px solid var(--pico-dropdown-border-color);
-  border-radius: var(--pico-border-radius);
-  min-width: 150px;
+  top: 0;
+  left: 100%;
+  padding: 0;
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  min-width: 200px;
   z-index: 1000;
   display: none;
   overflow: hidden;
+  box-shadow: var(--box-shadow);
 }
 #menu-dropdown.visible {
   display: block;
 }
 
 .menu-item {
-  color: var(--pico-primary-color);
-  padding: 0.75rem 1rem;
+  padding: 1.5rem 2rem;
+  font-size: large;
+  white-space: nowrap;
   display: block;
-  margin: 0;
   width: 100%;
   cursor: pointer;
   border: none;
@@ -102,8 +101,58 @@ tr.faded > td {
 }
 .menu-item:hover,
 .menu-item:focus {
-  color: var(--pico-primary-hover);
-  background-color: var(--pico-dropdown-hover-background-color);
+  background-color: var(--panel-bg);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: small;
+}
+
+th,
+td {
+  border: 1px solid var(--border-color);
+  padding: 5px;
+  text-align: left;
+}
+
+tr:hover {
+  background-color: var(--panel-bg);
+}
+
+tr.pulse > td {
+  color: var(--highlight-color);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+tr.faded > td {
+  opacity: 0.5;
+}
+
+#dashboard {
+  display: flex;
+  flex-direction: row;
+  gap: var(--padding);
+  padding-bottom: 20px;
+}
+
+#real_time_data {
+  min-width: 300px;
+}
+
+.chart_container {
+  height: 200px;
+  width: 400px;
+}
+
+@media (max-width: 768px) {
+  #dashboard {
+    flex-direction: column;
+  }
+  #chart_container {
+    width: 100%;
+  }
 }
 
 @keyframes pulse {

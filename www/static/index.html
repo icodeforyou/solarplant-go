@@ -16,7 +16,6 @@
     crossorigin="anonymous"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
   <link rel="stylesheet" href="/main.css">
   <script>
     window.addEventListener("load", () => {
@@ -42,35 +41,35 @@
 </head>
 
 <body>
-  <main class="container-fluid">
-    <div id="header">
-      <nav id="menu-container">
-        <button id="menu-button" aria-label="Menu" onclick="toggleMenu()">
-          <svg width="24" height="24" viewBox="0 0 24 24">
-            <rect y="4" width="24" height="2" rx="1"></rect>
-            <rect y="11" width="24" height="2" rx="1"></rect>
-            <rect y="18" width="24" height="2" rx="1"></rect>
-          </svg>
+  <header>
+    <nav id="menu-container">
+      <button id="menu-button" aria-label="Menu" onclick="toggleMenu()">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <rect y="4" width="24" height="2" rx="1"></rect>
+          <rect y="11" width="24" height="2" rx="1"></rect>
+          <rect y="18" width="24" height="2" rx="1"></rect>
+        </svg>
+      </button>
+      <div id="menu-dropdown">
+        <button class="menu-item" hx-get="/timeseries" hx-target="#data" hx-on::after-request="toggleMenu()">
+          Time Series
         </button>
-        <div id="menu-dropdown">
-          <button class="menu-item" hx-get="/timeseries" hx-target="#data" hx-on::after-request="toggleMenu()">
-            Time Series
-          </button>
-          <button class="menu-item" hx-get="/log" hx-target="#data" hx-on::after-request="toggleMenu()">
-            Log
-          </button>
-        </div>
-      </nav>
-      <h1>Solarplant</h1>
-    </div>
-    <div id="top_panel">
+        <button class="menu-item" hx-get="/log" hx-target="#data" hx-on::after-request="toggleMenu()">
+          Log
+        </button>
+      </div>
+    </nav>
+    <h1>Solarplant</h1>
+  </header>
+  <main>
+    <div id="dashboard">
       <div hx-ext="ws" ws-connect="/ws">
         <div id="real_time_data"></div>
       </div>
-      <div id="chart_container">
+      <div class="chart_container">
         <canvas id="chart1"></canvas>
       </div>
-      <div id="chart_container">
+      <div class="chart_container">
         <canvas id="chart2"></canvas>
       </div>
     </div>
