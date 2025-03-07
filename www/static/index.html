@@ -76,7 +76,9 @@
         <canvas id="chart2"></canvas>
       </div>
     </div>
-    <div id="data" hx-get="/timeseries" hx-trigger="load"></div>
+    <div id="data">
+      <table hx-get="/timeseries" hx-trigger="load" hx-swap="outerHTML"></table>
+    </div>
   </main>
   <footer hx-get="/sysinfo" hx-trigger="load"></footer>
 </body>
