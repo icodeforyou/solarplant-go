@@ -17,7 +17,7 @@
   </thead>
   <tbody>
     {{ range . }}
-    <tr {{if IsCurrentHour .When}}class="pulse" {{else if IsAfterHour .When}}class="faded" {{end}}>
+    <tr {{if eq .ComparedToThisHour 0}}class="pulse" {{else if gt .ComparedToThisHour 0}}class="faded" {{end}}>
       <td style="white-space: nowrap;">{{ .When.Date }} - {{ .When.Hour }}</td>
       <td>{{ .CloudCover }}</td>
       <td>{{ OneDecimal .Temperature }}</td>

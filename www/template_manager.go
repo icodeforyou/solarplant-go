@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/angas/solarplant-go/hours"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -50,15 +49,6 @@ var funcMap = template.FuncMap{
 		return fmt.Sprintf("%.2f", n)
 	},
 	"Subtract": func(a, b int) int { return a - b },
-	"IsBeforeHour": func(dh hours.DateHour) bool {
-		return dh.Before(hours.FromNow())
-	},
-	"IsCurrentHour": func(dh hours.DateHour) bool {
-		return dh == hours.FromNow()
-	},
-	"IsAfterHour": func(dh hours.DateHour) bool {
-		return dh.After(hours.FromNow())
-	},
 }
 
 func NewTemplateManager(logger *slog.Logger, extDir *string) (*TemplateManager, error) {

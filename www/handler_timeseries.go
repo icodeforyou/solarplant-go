@@ -26,11 +26,13 @@ type templateRow struct {
 	EstimatedConsumption sql.NullFloat64
 	EstimatedProduction  sql.NullFloat64
 	Strategy             string
+	ComparedToThisHour   int
 }
 
 func NewTimeSeriesHandler(logger *slog.Logger, config config.AppConfigApi, db *database.Database, tm *TemplateManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
+		thisHour := hours.FromNow()
 		from := hours.FromNow().Sub(intOrDefault(r.URL, "hours", 24))
 
 		timeseries, err := db.GetTimeSeriesSinceHour(r.Context(), from)
@@ -85,6 +87,7 @@ func NewTimeSeriesHandler(logger *slog.Logger, config config.AppConfigApi, db *d
 				Strategy:             strategy,
 				EstimatedConsumption: estCons,
 				EstimatedProduction:  estProd,
+				ComparedToThisHour:   ts.When.Compare(thisHour),
 			})
 		}
 
@@ -104,7 +107,16 @@ func NewTimeSeriesHandler(logger *slog.Logger, config config.AppConfigApi, db *d
 
 			for _, ep := range energyPrice {
 				cloudCover, temperature, precipitation := uint8(0), 0.0, 0.0
-				idx := slices.IndexFunc(weatherForecast, func(wf database.WeatherForecastRow) bool { return wf.When == ep.When })
+
+				strategy := ""
+				idx := slices.IndexFunc(planning, func(p database.PlanningRow) bool { return p.When == ep.When })
+				if idx != -1 {
+					strategy = planning[idx].Strategy
+				} else {
+					break // Remaining hours have not been planned yet
+				}
+
+				idx = slices.IndexFunc(weatherForecast, func(wf database.WeatherForecastRow) bool { return wf.When == ep.When })
 				if idx != -1 {
 					cloudCover = weatherForecast[idx].CloudCover
 					temperature = weatherForecast[idx].Temperature
@@ -118,15 +130,7 @@ func NewTimeSeriesHandler(logger *slog.Logger, config config.AppConfigApi, db *d
 					estProd = sql.NullFloat64{Valid: true, Float64: energyForecast[idx].Production}
 				}
 
-				strategy := ""
-				idx = slices.IndexFunc(planning, func(p database.PlanningRow) bool { return p.When == ep.When })
-				if idx != -1 {
-					strategy = planning[idx].Strategy
-				} else {
-					break // Remaining hours have not been planned yet
-				}
-
-				rows = append(rows, templateRow{
+				row := templateRow{
 					When:                 ep.When,
 					CloudCover:           cloudCover,
 					Temperature:          temperature,
@@ -135,7 +139,10 @@ func NewTimeSeriesHandler(logger *slog.Logger, config config.AppConfigApi, db *d
 					EstimatedConsumption: estCons,
 					EstimatedProduction:  estProd,
 					Strategy:             strategy,
-				})
+					ComparedToThisHour:   ep.When.Compare(thisHour),
+				}
+
+				rows = append(rows, row)
 			}
 		}
 
