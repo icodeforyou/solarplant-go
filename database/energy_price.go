@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/angas/solarplant-go/convert"
+	"github.com/angas/solarplant-go/calc"
 	"github.com/angas/solarplant-go/hours"
 )
 
@@ -24,7 +24,7 @@ func (d *Database) SaveEnergyPrices(ctx context.Context, rows []EnergyPriceRow) 
 			ON CONFLICT(date, hour) DO UPDATE SET price = excluded.price`,
 			row.When.Date,
 			row.When.Hour,
-			convert.RoundFloat64(row.Price, 4))
+			calc.RoundFloat64(row.Price, 4))
 		if err != nil {
 			return fmt.Errorf("saving energy prices: %w", err)
 		}

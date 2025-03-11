@@ -1,7 +1,7 @@
 package ferroamp
 
 import (
-	"github.com/angas/solarplant-go/convert"
+	"github.com/angas/solarplant-go/calc"
 )
 
 type ValueObject[T ~float64 | ~int64] struct {
@@ -22,41 +22,41 @@ type Phases struct {
 }
 
 type EhubMessage struct {
-	GridFreq      FltObj  `json:"gridfreq,omitempty"` // Estimated Grid Frequency(Hz)
-	Ul            Phases  `json:"ul"`                 // External voltage (V)
-	Iace          Phases  `json:"iace"`               // ACE equalization current set-points in Arms (A)
-	Il            Phases  `json:"il"`                 // Inverter RMS current (A)
-	Ild           Phases  `json:"ild"`                // Inverter reactive current (A)
-	Ilq           Phases  `json:"ilq"`                // Inverter active current (A)
-	Iext          Phases  `json:"iext"`               // External/grid RMS current (A)
-	Iextd         Phases  `json:"iextd"`              // External/grid reactive current (A)
-	Iextq         Phases  `json:"iextq"`              // External/grid active current (A)
-	ILoadd        *Phases `json:"iLoadd,omitempty"`   // (A)
-	ILoadq        *Phases `json:"iLoadq,omitempty"`   // (A)
-	Soc           FltObj  `json:"soc,omitempty"`      // State Of Charge for the system (%)
-	Soh           FltObj  `json:"soh,omitempty"`      // State Of Health for the system (%)
-	Sext          FltObj  `json:"sext"`               // Apparent power (VA)
-	Pext          Phases  `json:"pext"`               // External/grid power, active (W)
-	PextReactive  Phases  `json:"pextreactive"`       // External/grid power, reactive (W)
-	Pinv          Phases  `json:"pinv"`               // Inverter power active (W)
-	PinvReactive  Phases  `json:"pinvreactive"`       // Inverter power active (W)
-	Pload         Phases  `json:"pload"`              // (W)
-	PloadReactive Phases  `json:"ploadreactive"`      // (W)
-	Ppv           FltObj  `json:"ppv,omitempty"`      // Only sent when system has PV (W)
-	Pbat          FltObj  `json:"pbat,omitempty"`     // Only sent when system has batteries (W)
-	RatedCap      FltObj  `json:"ratedcap,omitempty"` // Total rated capacity of all batteries in system (Wh)
-	WextProdQ     Phases  `json:"wextprodq"`          // (mJ)
-	WextConsQ     Phases  `json:"wextconsq"`          // (mJ)
-	WinvProdQ     Phases  `json:"winvprodq"`          // (mJ)
-	WinvConsQ     Phases  `json:"winvconsq"`          // (mJ)
-	WloadProdQ    Phases  `json:"wloadprodq"`         // (mJ)
-	WloadConsQ    Phases  `json:"wloadconsq"`         // (mJ)
-	Wpv           FltObj  `json:"wpv,omitempty"`      // Only sent when system has PV (mJ)
-	WbatProd      FltObj  `json:"wbatprod,omitempty"` // Only sent when system has batteries (mJ)
-	WbatCons      FltObj  `json:"wbatcons,omitempty"` // Only sent when system has batteries (mJ)
-	State         FltObj  `json:"state"`              // State of the system
-	Udc           Udc     `json:"udc"`                // Positive and negative DC Link voltage (V)
-	Ts            StrObj  `json:"ts"`                 // Time stamp when message was published
+	GridFreq      FltObj  `json:"gridfreq"`         // Estimated Grid Frequency(Hz)
+	Ul            Phases  `json:"ul"`               // External voltage (V)
+	Iace          Phases  `json:"iace"`             // ACE equalization current set-points in Arms (A)
+	Il            Phases  `json:"il"`               // Inverter RMS current (A)
+	Ild           Phases  `json:"ild"`              // Inverter reactive current (A)
+	Ilq           Phases  `json:"ilq"`              // Inverter active current (A)
+	Iext          Phases  `json:"iext"`             // External/grid RMS current (A)
+	Iextd         Phases  `json:"iextd"`            // External/grid reactive current (A)
+	Iextq         Phases  `json:"iextq"`            // External/grid active current (A)
+	ILoadd        *Phases `json:"iLoadd,omitempty"` // (A)
+	ILoadq        *Phases `json:"iLoadq,omitempty"` // (A)
+	Soc           FltObj  `json:"soc"`              // State Of Charge for the system (%)
+	Soh           FltObj  `json:"soh"`              // State Of Health for the system (%)
+	Sext          FltObj  `json:"sext"`             // Apparent power (VA)
+	Pext          Phases  `json:"pext"`             // External/grid power, active (W)
+	PextReactive  Phases  `json:"pextreactive"`     // External/grid power, reactive (W)
+	Pinv          Phases  `json:"pinv"`             // Inverter power active (W)
+	PinvReactive  Phases  `json:"pinvreactive"`     // Inverter power active (W)
+	Pload         Phases  `json:"pload"`            // (W)
+	PloadReactive Phases  `json:"ploadreactive"`    // (W)
+	Ppv           FltObj  `json:"ppv"`              // Only sent when system has PV (W)
+	Pbat          FltObj  `json:"pbat"`             // Only sent when system has batteries (W)
+	RatedCap      FltObj  `json:"ratedcap"`         // Total rated capacity of all batteries in system (Wh)
+	WextProdQ     Phases  `json:"wextprodq"`        // (mJ) Claude: Represents energy produced and exported to the external grid
+	WextConsQ     Phases  `json:"wextconsq"`        // (mJ) Claude: Represents energy consumed/imported from the external grid
+	WinvProdQ     Phases  `json:"winvprodq"`        // (mJ)
+	WinvConsQ     Phases  `json:"winvconsq"`        // (mJ)
+	WloadProdQ    Phases  `json:"wloadprodq"`       // (mJ)
+	WloadConsQ    Phases  `json:"wloadconsq"`       // (mJ)
+	Wpv           FltObj  `json:"wpv"`              // Only sent when system has PV (mJ)
+	WbatProd      FltObj  `json:"wbatprod"`         // Only sent when system has batteries (mJ)
+	WbatCons      FltObj  `json:"wbatcons"`         // Only sent when system has batteries (mJ)
+	State         FltObj  `json:"state"`            // State of the system
+	Udc           Udc     `json:"udc"`              // Positive and negative DC Link voltage (V)
+	Ts            StrObj  `json:"ts"`               // Time stamp when message was published
 }
 
 type Udc struct {
@@ -131,9 +131,9 @@ var esoFaultsCodes = map[uint16]string{
 
 /** WARNING: Don't use this, values aren't updated as they should */
 func (ehub *EhubMessage) LifetimeProduced() float64 {
-	return convert.MJ2Kwh(ehub.WloadProdQ.L1 + ehub.WloadProdQ.L2 + ehub.WloadProdQ.L3)
+	return calc.MJ2Kwh(ehub.WloadProdQ.L1 + ehub.WloadProdQ.L2 + ehub.WloadProdQ.L3)
 }
 
 func (ehub *EhubMessage) LifetimeConsumed() float64 {
-	return convert.MJ2Kwh(ehub.WloadConsQ.L1 + ehub.WloadConsQ.L2 + ehub.WloadConsQ.L3)
+	return calc.MJ2Kwh(ehub.WloadConsQ.L1 + ehub.WloadConsQ.L2 + ehub.WloadConsQ.L3)
 }

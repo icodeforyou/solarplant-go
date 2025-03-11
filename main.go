@@ -44,6 +44,11 @@ func main() {
 	}
 	defer db.Close()
 
+	recentHours := database.NewRecentHours(db)
+	if err := recentHours.Reload(ctx); err != nil {
+		panic(err)
+	}
+
 	logger := slog.New(logging.NewMultiHandler(
 		consolHandler,
 		logging.NewSQLiteHandler(db, config.Logging.GetDbLevel(), config.Logging.GetDbAttrsFormat())))
@@ -58,11 +63,11 @@ func main() {
 		config.Ferroamp.Username,
 		config.Ferroamp.Password)
 
-	faData := ferroamp.NewFaInMemData()
-	fa.OnEhubMessage = faData.SetEHub
-	fa.OnSsoMessage = faData.SetSso
-	fa.OnEsmMessage = faData.SetEsm
-	fa.OnEsoMessage = faData.SetEso
+	faInMem := ferroamp.NewFaInMemData()
+	fa.OnEhubMessage = faInMem.SetEHub
+	fa.OnSsoMessage = faInMem.SetSso
+	fa.OnEsmMessage = faInMem.SetEsm
+	fa.OnEsoMessage = faInMem.SetEso
 	fa.OnControlResponse = func(msg *ferroamp.ControlResponseMessage) {
 		if msg.Status == "ack" {
 			logger.Info("control request succeeded (ack)", slog.String("transId", msg.TransId), slog.String("message", msg.Message))
@@ -86,7 +91,7 @@ func main() {
 		nordpool.New(config.EnergyPrice.Area),       // Secondary provider
 	}
 
-	tasks := task.NewTasks(db, energyPriceProviders, faData, config)
+	tasks := task.NewTasks(db, energyPriceProviders, faInMem, recentHours, config)
 	if isDevMode() {
 		logger.Info("dev mode, skipping task scheduling")
 	} else {
@@ -99,7 +104,7 @@ func main() {
 		UpdateThreshold: 0.1,
 		GridMaxPower:    config.Planner.GridMaxPower,
 	}
-	batteryRegulator := task.NewBatteryRegulator(logger, db, config.BatterySpec, faData, regulatorStrategy)
+	batteryRegulator := task.NewBatteryRegulator(logger, db, config.BatterySpec, faInMem, regulatorStrategy)
 	if isDevMode() {
 		logger.Info("dev mode, skipping battery regulator")
 	} else {
@@ -138,7 +143,7 @@ func main() {
 	}()
 
 	sysInfo := www.SysInfo{CommitHash: CommitHash, BuildTime: BuildTime, RuntimeVersion: runtime.Version()}
-	server := www.StartServer(db, tasks, faData, config.Api, sysInfo)
+	server := www.StartServer(db, tasks, faInMem, recentHours, config, sysInfo)
 	server.Run(ctx)
 }
 

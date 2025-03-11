@@ -15,7 +15,6 @@ import (
 	"github.com/angas/solarplant-go/config"
 	"github.com/angas/solarplant-go/database"
 	"github.com/angas/solarplant-go/ferroamp"
-	"github.com/angas/solarplant-go/hours"
 	"github.com/angas/solarplant-go/task"
 )
 
@@ -26,36 +25,45 @@ type SysInfo struct {
 }
 
 type Server struct {
-	logger *slog.Logger
-	config config.AppConfigApi
-	db     *database.Database
-	fa     *ferroamp.FaInMemData
-	hub    *Hub
-	tm     *TemplateManager
+	logger      *slog.Logger
+	db          *database.Database
+	fa          *ferroamp.FaInMemData
+	hub         *Hub
+	recentHours *database.RecentHours
+	config      *config.AppConfig
+	tm          *TemplateManager
 }
 
 //go:embed static
 var embeddedStaticDir embed.FS
 
-func StartServer(db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemData, config config.AppConfigApi, sysInfo SysInfo) *Server {
+func StartServer(
+	db *database.Database,
+	tasks *task.Tasks,
+	faInMem *ferroamp.FaInMemData,
+	recentHours *database.RecentHours,
+	config *config.AppConfig,
+	sysInfo SysInfo) *Server {
+
 	logger := slog.Default().With("module", "www")
-	tm, err := NewTemplateManager(logger, config.WwwDir)
+	tm, err := NewTemplateManager(logger, config.Api.WwwDir)
 	if err != nil {
 		logger.Error("template manager initialization error", slog.Any("error", err))
 	}
 
 	s := &Server{
-		logger: logger,
-		config: config,
-		db:     db,
-		fa:     fa,
-		hub:    NewHub(logger),
-		tm:     tm,
+		logger:      logger,
+		db:          db,
+		fa:          faInMem,
+		hub:         NewHub(logger),
+		recentHours: recentHours,
+		config:      config,
+		tm:          tm,
 	}
 
 	go s.hub.Run()
 
-	http.Handle("/", staticFilesHandler(config.WwwDir))
+	http.Handle("/", staticFilesHandler(config.Api.WwwDir))
 
 	http.Handle("GET /sysinfo", NewSysInfoHandler(
 		logger.With(slog.String("handler", "timeseries")),
@@ -64,13 +72,14 @@ func StartServer(db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemD
 
 	http.Handle("GET /timeseries", NewTimeSeriesHandler(
 		logger.With(slog.String("handler", "timeseries")),
-		s.config,
 		s.db,
-		s.tm))
+		s.tm,
+		s.recentHours,
+	))
 
 	http.Handle("GET /log", NewLogHandler(logger.With(
 		slog.String("handler", "log")),
-		s.config,
+		s.config.Api,
 		s.db,
 		s.tm))
 
@@ -94,10 +103,10 @@ func StartServer(db *database.Database, tasks *task.Tasks, fa *ferroamp.FaInMemD
 }
 
 func (s *Server) Run(ctx context.Context) {
-	s.logger.Info("staring server...", "port", s.config.Port)
+	s.logger.Info("staring server...", "port", s.config.Api.Port)
 
 	srv := &http.Server{
-		Addr: fmt.Sprintf(":%d", s.config.Port),
+		Addr: fmt.Sprintf(":%d", s.config.Api.Port),
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			s.logger.Debug("http request",
 				slog.String("method", r.Method),
@@ -118,8 +127,8 @@ func (s *Server) Run(ctx context.Context) {
 	defer ticker.Stop()
 
 	// Keeping state to avoid spamming logs
-	fetchPanningErrorState := false
-	fetchEnergyPriceErrorState := false
+	realTimeErrorState := false
+	realTimeMgr := NewRealTimeManager(s.db, s.fa, s.recentHours, s.config.EnergyPrice)
 
 	for {
 		select {
@@ -138,42 +147,18 @@ func (s *Server) Run(ctx context.Context) {
 			return
 
 		case <-ticker.C:
-			hour := hours.FromNow()
-			// TODO: This is a hack to get the current hour's planning,
-			// it should be done in a more efficient way.
-			planning, err := s.db.GetPlanningForHour(ctx, hour)
+			rtData, err := realTimeMgr.Get(ctx)
 			if err != nil {
-				if !fetchPanningErrorState {
-					fetchPanningErrorState = true
-					s.logger.Warn("failed to get planning", slog.String("hour", hour.String()), slog.Any("error", err))
+				if !realTimeErrorState {
+					s.logger.Error("failed to get real time data", slog.Any("error", err))
+					realTimeErrorState = true
 				}
-				planning = database.PlanningRow{}
+				continue
 			} else {
-				fetchPanningErrorState = false
+				realTimeErrorState = false
 			}
 
-			// TODO: This is a hack to get the current hour's ,
-			// it should be done in a more efficient way.
-			price, err := s.db.GetEnergyPriceForHour(ctx, hour)
-			if err != nil {
-				if !fetchEnergyPriceErrorState {
-					fetchEnergyPriceErrorState = true
-					s.logger.Warn("failed to get energy price", slog.String("hour", hour.String()), slog.Any("error", err))
-				}
-				price = database.EnergyPriceRow{}
-			} else {
-				fetchEnergyPriceErrorState = false
-			}
-
-			data := RealTimeData{
-				GridPower:    s.fa.GridPower(),
-				SolarPower:   s.fa.SolarPower(),
-				BatteryPower: s.fa.BatteryPower(),
-				BatteryLevel: s.fa.BatteryLevel(),
-				EnergyPrice:  price.Price,
-				Strategy:     planning.Strategy, // TODO: If we can't get current strategy we should probably show a default value.
-			}
-			buf, err := s.tm.Execute("real_time_data.html", data)
+			buf, err := s.tm.Execute("real_time_data.html", rtData)
 			if err != nil {
 				s.logger.Error("template execution failed", slog.Any("error", err))
 				return

@@ -25,7 +25,8 @@ type Tasks struct {
 func NewTasks(
 	db *database.Database,
 	energyPriceProviders []types.EnergyPriceProvider,
-	faData *ferroamp.FaInMemData,
+	faInMem *ferroamp.FaInMemData,
+	recentHours *database.RecentHours,
 	cnfg *config.AppConfig,
 ) *Tasks {
 	logger := slog.Default().With("module", "tasks")
@@ -35,8 +36,8 @@ func NewTasks(
 		WeatherForecastTask: NewWeatcherForcastTask(logger.With(slog.String("task", "weather_forecast")), db, cnfg.WeatherForecast),
 		EnergyForecastTask:  NewEnergyForecastTask(logger.With(slog.String("task", "energy_forecast")), db, cnfg.EnergyForecast),
 		EnergyPriceTask:     NewEnergyPriceTask(logger.With(slog.String("task", "energy_price")), db, energyPriceProviders),
-		TimeSeriesTask:      NewTimeSeriesTask(logger.With(slog.String("task", "time_series")), db, faData),
-		PlanningTask:        NewPlanningTask(logger.With(slog.String("task", "planning")), db, cnfg, faData),
+		TimeSeriesTask:      NewHourlyTask(logger.With(slog.String("task", "time_series")), db, cnfg.EnergyPrice, faInMem, recentHours),
+		PlanningTask:        NewPlanningTask(logger.With(slog.String("task", "planning")), db, cnfg, faInMem),
 		MaintenanceTask:     NewMaintenanceTask(logger.With(slog.String("task", "maintenance")), db, cnfg),
 	}
 }

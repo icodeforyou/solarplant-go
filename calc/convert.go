@@ -1,8 +1,6 @@
-package convert
+package calc
 
-import (
-	"math"
-)
+import "math"
 
 func TwoDecimals(number float64) float64 {
 	return RoundFloat64(number, 2)

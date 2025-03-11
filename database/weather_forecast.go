@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/angas/solarplant-go/convert"
+	"github.com/angas/solarplant-go/calc"
 	"github.com/angas/solarplant-go/hours"
 )
 
@@ -38,8 +38,8 @@ func (d *Database) SaveForcast(ctx context.Context, rows []WeatherForecastRow) e
 			row.When.Date,
 			row.When.Hour,
 			row.CloudCover,
-			convert.TwoDecimals(row.Temperature),
-			convert.TwoDecimals(row.Precipitation))
+			calc.TwoDecimals(row.Temperature),
+			calc.TwoDecimals(row.Precipitation))
 		if err != nil {
 			return fmt.Errorf("saving weather forecast: %w", err)
 		}

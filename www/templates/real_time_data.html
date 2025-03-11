@@ -1,28 +1,34 @@
 <div id="real_time_data">
   <table>
     <tr>
-      <td>Grid Power</td>
-      <td style="text-align: right">{{ Flt64ToStr .GridPower }} kW</td>
-    </tr>
-    <tr>
       <td>Solar Power</td>
-      <td style="text-align: right">{{ Flt64ToStr .SolarPower }} kW</td>
+      <td style="text-align: right">{{ MaybeFloat64 .SolarPower 2 }} kW</td>
     </tr>
     <tr>
       <td>Battery Power</td>
-      <td style="text-align: right">{{ Flt64ToStr .BatteryPower }} kW</td>
+      <td style="text-align: right">{{ MaybeFloat64 .BatteryPower 2 }} kW</td>
     </tr>
     <tr>
       <td>Battery Level</td>
-      <td style="text-align: right">{{ Flt64ToStr .BatteryLevel }} %</td>
+      <td style="text-align: right">{{ MaybeFloat64 .BatteryLevel 2 }} %</td>
+    </tr>
+    <tr>
+      <td>Grid Power</td>
+      <td style="text-align: right">{{ MaybeFloat64 .GridPower 2 }} kW</td>
+    </tr>
+    <tr>
+      <td>Grid Imp/Exp (this hour)</td>
+      <td style="text-align: right">{{ MaybeFloat64 .GridImportThisHour 2 }} / {{ MaybeFloat64 .GridExportThisHour 2 }}
+        kWh
+      </td>
     </tr>
     <tr>
       <td>Energy Price</td>
-      <td style="text-align: right">{{ Flt64ToStr .EnergyPrice }} SEK</td>
+      <td style="text-align: right">{{ MaybeFloat64 .EnergyPrice 4 }} SEK</td>
     </tr>
     <tr>
-      <td>Battery Strategy</td>
-      <td style="text-align: right">{{ .Strategy }}</td>
+      <td>Cash Flow (this hour)</td>
+      <td style="text-align: right">{{ MaybeFloat64 .CashFlowThisHour 2 }} SEK</td>
     </tr>
   </table>
 </div>

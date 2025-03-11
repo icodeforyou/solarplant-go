@@ -2,7 +2,6 @@ package www
 
 import (
 	"bytes"
-	"database/sql"
 	"embed"
 	"fmt"
 	"html/template"
@@ -11,20 +10,12 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/angas/solarplant-go/www/maybe"
 	"github.com/fsnotify/fsnotify"
 )
 
 //go:embed templates
 var templatesDirEmbed embed.FS
-
-type RealTimeData struct {
-	GridPower    float64
-	SolarPower   float64
-	BatteryPower float64
-	BatteryLevel float64
-	EnergyPrice  float64
-	Strategy     string
-}
 
 type TemplateManager struct {
 	templates *template.Template
@@ -33,22 +24,25 @@ type TemplateManager struct {
 }
 
 var funcMap = template.FuncMap{
-	"Flt64ToStr": func(f float64) string {
-		return fmt.Sprintf("%.2f", f)
-	},
-	"NullFloat64": func(n sql.NullFloat64) string {
-		if n.Valid {
-			return fmt.Sprintf("%.2f", n.Float64)
+	"Subtract": func(a, b int) int { return a - b },
+	"MaybeString": func(m maybe.Maybe[string]) string {
+		if m.IsValid() {
+			return m.Value()
 		}
 		return "-"
 	},
-	"OneDecimal": func(n float64) string {
-		return fmt.Sprintf("%.1f", n)
+	"MaybeUint8": func(m maybe.Maybe[uint8]) string {
+		if m.IsValid() {
+			return fmt.Sprintf("%d", m.Value())
+		}
+		return "-"
 	},
-	"TwoDecimals": func(n float64) string {
-		return fmt.Sprintf("%.2f", n)
+	"MaybeFloat64": func(m maybe.Maybe[float64], decimals int) string {
+		if m.IsValid() {
+			return fmt.Sprintf("%."+fmt.Sprintf("%d", decimals)+"f", m.Value())
+		}
+		return "-"
 	},
-	"Subtract": func(a, b int) int { return a - b },
 }
 
 func NewTemplateManager(logger *slog.Logger, extDir *string) (*TemplateManager, error) {

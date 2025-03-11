@@ -1,17 +1,19 @@
 <table hx-get="/timeseries" hx-trigger="load delay:1m" hx-swap="outerHTML">
   <thead>
     <tr>
-      <th>Start hour (UTC)</th>
-      <th>Cloud cover (octas)</th>
-      <th>Temp (°C)</th>
-      <th>Precipitation (mm)</th>
-      <th>Energy price (SEK/kWh)</th>
-      <th>Batt lvl (%)</th>
-      <th>Batt net load (kWh)</th>
-      <th>Cons. act. (kWh)</th>
-      <th>Cons. est. (kWh)</th>
-      <th>Prod. act. (kWh)</th>
-      <th>Prod. est. (kWh)</th>
+      <th>Start Hour (UTC)</th>
+      <th title="Cloud cover between 0-8">Cloud (octas)</th>
+      <th title="Temperature forecast">Temp (°C)</th>
+      <th title="Energy Price in SEK including VATs and Grid Benefit">Price (SEK/kWh)</th>
+      <th title="Battery Level">Batt Lvl (%)</th>
+      <th>Batt Net Load (kWh)</th>
+      <th title="Produced (actual)">Prod Act (kWh)</th>
+      <th title="Produced (estimated)">Prod Est (kWh)</th>
+      <th title="Consumed (actual)">Cons Act (kWh)</th>
+      <th title="Consumed (estimated)">Cons Est (kWh)</th>
+      <th title="Imported from the grid">Grid Imp (kWh)</th>
+      <th title="Exported to the grid ">Grid Exp (kWh)</th>
+      <th title="Positive selling, negative buying">Cash Flow (SEK)</th>
       <th>Strategy</th>
     </tr>
   </thead>
@@ -19,17 +21,19 @@
     {{ range . }}
     <tr {{if eq .ComparedToThisHour 0}}class="pulse" {{else if gt .ComparedToThisHour 0}}class="faded" {{end}}>
       <td style="white-space: nowrap;">{{ .When.Date }} - {{ .When.Hour }}</td>
-      <td>{{ .CloudCover }}</td>
-      <td>{{ OneDecimal .Temperature }}</td>
-      <td>{{ TwoDecimals .Precipitation }}</td>
-      <td>{{ TwoDecimals .EnergyPrice }}</td>
-      <td>{{ NullFloat64 .BatteryLevel }}</td>
-      <td>{{ NullFloat64 .BatteryNetLoad }}</td>
-      <td>{{ NullFloat64 .Consumption }}</td>
-      <td>{{ NullFloat64 .EstimatedConsumption }}</td>
-      <td>{{ NullFloat64 .Production }}</td>
-      <td>{{ NullFloat64 .EstimatedProduction }}</td>
-      <td>{{ .Strategy }}</td>
+      <td>{{ MaybeUint8 .CloudCover }}</td>
+      <td>{{ MaybeFloat64 .Temperature 1 }}</td>
+      <td>{{ MaybeFloat64 .EnergyPrice 4 }}</td>
+      <td>{{ MaybeFloat64 .BatteryLevel 2 }}</td>
+      <td>{{ MaybeFloat64 .BatteryNetLoad 2 }}</td>
+      <td>{{ MaybeFloat64 .Production 2 }}</td>
+      <td>{{ MaybeFloat64 .ProductionEstimated 2 }}</td>
+      <td>{{ MaybeFloat64 .Consumption 2 }}</td>
+      <td>{{ MaybeFloat64 .ConsumptionEstimated 2 }}</td>
+      <td>{{ MaybeFloat64 .GridImport 2 }}</td>
+      <td>{{ MaybeFloat64 .GridExport 2 }}</td>
+      <td>{{ MaybeFloat64 .CashFlow 2 }}</td>
+      <td>{{ MaybeString .Strategy }}</td>
     </tr>
     {{ end }}
   </tbody>

@@ -3,6 +3,8 @@ package optimize
 import (
 	"math"
 	"sort"
+
+	"github.com/angas/solarplant-go/calc"
 )
 
 type Forecast struct {
@@ -20,11 +22,11 @@ type Input struct {
 }
 
 func (i *Input) BuyPrice(price float64, kWh float64) float64 {
-	return kWh * (price + i.EnergyTax - i.GridBenefit)
+	return calc.BuyPrice(kWh, price, i.EnergyTax, i.GridBenefit)
 }
 
 func (i *Input) SellPrice(price float64, kWh float64) float64 {
-	return kWh * (price + i.EnergyTaxReduction)
+	return calc.SellPrice(kWh, price, i.EnergyTaxReduction)
 }
 
 type Output struct {

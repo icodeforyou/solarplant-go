@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/angas/solarplant-go/convert"
+	"github.com/angas/solarplant-go/calc"
 	"github.com/angas/solarplant-go/hours"
 )
 
@@ -36,8 +36,8 @@ func (d *Database) SaveEnergyForecast(ctx context.Context, rows []EnergyForecast
 			consumption = excluded.consumption;`,
 			row.When.Date,
 			row.When.Hour,
-			convert.TwoDecimals(row.Production),
-			convert.TwoDecimals(row.Consumption),
+			calc.TwoDecimals(row.Production),
+			calc.TwoDecimals(row.Consumption),
 		)
 		if err != nil {
 			return fmt.Errorf("saving energy forecast: %w", err)

@@ -47,7 +47,7 @@ type AppConfigWeatcherForecast struct {
 type AppConfigEnergyPrice struct {
 	Tax          float64 `mapstructure:"tax_including_vat"` // Energy tax in SEK/kWh including VAT
 	TaxReduction float64 `mapstructure:"tax_reduction"`     // Energy tax reduction in SEK/kWh when selling energy back to the grid
-	GridBenifit  float64 `mapstructure:"grid_benefit"`      // Grid benefit in SEK/kWh (nätnytta)
+	GridBenefit  float64 `mapstructure:"grid_benefit"`      // Grid benefit in SEK/kWh (nätnytta)
 	Area         string  `mapstructure:"area"`              // "SE1", "SE2", "SE3", "SE4"
 	RunAt        string  `mapstructure:"run_at"`
 }
@@ -55,7 +55,7 @@ type AppConfigEnergyPrice struct {
 type AppConfigEnergyForecast struct {
 	HistoricalDays   int     `mapstructure:"historical_days"`
 	HoursAhead       int     `mapstructure:"hours_ahead"`
-	CloudCoverImpact float64 `mapstructure:"cloud_cover_impact"`
+	CloudCoverImpact float64 `mapstructure:"cloud_cover_impact"` // A value between 0 and 1 where 0 means no impact and 1 means full impact, i.e. no EV production when cloudiness is 8 octas
 	RunAt            string  `mapstructure:"run_at"`
 }
 

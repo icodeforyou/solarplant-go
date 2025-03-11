@@ -1,0 +1,6 @@
+ALTER TABLE time_series ADD COLUMN production_estimated REAL NOT NULL DEFAULT 0;
+ALTER TABLE time_series ADD COLUMN consumption_estimated REAL NOT NULL DEFAULT 0;
+ALTER TABLE time_series ADD COLUMN grid_import REAL NOT NULL DEFAULT 0;
+ALTER TABLE time_series ADD COLUMN grid_export REAL NOT NULL DEFAULT 0;
+ALTER TABLE time_series ADD COLUMN cash_flow REAL NOT NULL DEFAULT 0;
+ALTER TABLE time_series ADD COLUMN strategy TEXT NOT NULL DEFAULT 'default';

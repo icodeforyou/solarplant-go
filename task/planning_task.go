@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/angas/solarplant-go/calc"
 	"github.com/angas/solarplant-go/config"
-	"github.com/angas/solarplant-go/convert"
 	"github.com/angas/solarplant-go/database"
 	"github.com/angas/solarplant-go/ferroamp"
 	"github.com/angas/solarplant-go/hours"
@@ -58,7 +58,7 @@ func NewPlanningTask(logger *slog.Logger, db *database.Database, cnfg *config.Ap
 
 			optInput.Forecast[h] = optimize.Forecast{
 				EnergyPrice:   ep.Price,
-				EnergyBalance: convert.TwoDecimals(ef.Production - ef.Consumption),
+				EnergyBalance: calc.TwoDecimals(ef.Production - ef.Consumption),
 			}
 		}
 

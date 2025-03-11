@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/angas/solarplant-go/calc"
 	"github.com/angas/solarplant-go/config"
-	"github.com/angas/solarplant-go/convert"
 	"github.com/angas/solarplant-go/database"
 	"github.com/angas/solarplant-go/hours"
 )
@@ -60,8 +60,8 @@ func runEnergyForecastTask(logger *slog.Logger, db *database.Database, config co
 
 		row := database.EnergyForecastRow{
 			When:        hour,
-			Production:  convert.TwoDecimals(estProduction),
-			Consumption: convert.TwoDecimals(avg.Consumption),
+			Production:  calc.TwoDecimals(estProduction),
+			Consumption: calc.TwoDecimals(avg.Consumption),
 		}
 
 		rows = append(rows, row)
