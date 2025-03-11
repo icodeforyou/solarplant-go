@@ -18,7 +18,7 @@ import (
 func NewPlanningTask(logger *slog.Logger, db *database.Database, cnfg *config.AppConfig, faInMem *ferroamp.FaInMemData) func() {
 	return func() {
 		logger.Debug("running planning task...")
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 
 		startHour := hours.FromNow().Add(1)
@@ -46,7 +46,7 @@ func NewPlanningTask(logger *slog.Logger, db *database.Database, cnfg *config.Ap
 				return
 			}
 
-			ep, err := db.GetEnergyPriceForHour(ctx, hour)
+			ep, err := db.GetEnergyPrice(ctx, hour)
 			if err != nil {
 				if err == sql.ErrNoRows {
 					logger.Warn("can't plan upcoming hours, no energy price found", slog.String("hour", hour.String()))

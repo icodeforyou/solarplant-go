@@ -47,7 +47,7 @@ func (d *Database) SaveEnergyForecast(ctx context.Context, rows []EnergyForecast
 }
 
 func (d *Database) GetEnergyForecast(ctx context.Context, dh hours.DateHour) (EnergyForecastRow, error) {
-	rows, err := d.read.QueryContext(ctx, `
+	row := d.read.QueryRowContext(ctx, `
 		SELECT
 			date,
 			hour,
@@ -56,26 +56,17 @@ func (d *Database) GetEnergyForecast(ctx context.Context, dh hours.DateHour) (En
 		FROM energy_forecast
 		WHERE (date = ? AND hour = ?)`,
 		dh.Date, dh.Hour)
-	if err != nil {
-		return EnergyForecastRow{}, fmt.Errorf("fetching energy forecast for %s: %w", dh, err)
-	}
-	defer rows.Close()
 
-	if !rows.Next() {
+	var ef EnergyForecastRow
+	err := row.Scan(&ef.When.Date, &ef.When.Hour, &ef.Production, &ef.Consumption)
+	if err == sql.ErrNoRows {
 		return EnergyForecastRow{}, sql.ErrNoRows
 	}
-
-	var row EnergyForecastRow
-	err = rows.Scan(
-		&row.When.Date,
-		&row.When.Hour,
-		&row.Production,
-		&row.Consumption)
 	if err != nil {
 		return EnergyForecastRow{}, fmt.Errorf("scanning energy forecast row: %w", err)
 	}
 
-	return row, nil
+	return ef, nil
 }
 
 func (d *Database) GetEnergyForecastFrom(ctx context.Context, dh hours.DateHour) ([]EnergyForecastRow, error) {
@@ -93,7 +84,7 @@ func (d *Database) GetEnergyForecastFrom(ctx context.Context, dh hours.DateHour)
 	}
 	defer rows.Close()
 
-	var forecasts []EnergyForecastRow
+	var ef []EnergyForecastRow
 	for rows.Next() {
 		var row EnergyForecastRow
 		err := rows.Scan(
@@ -104,10 +95,10 @@ func (d *Database) GetEnergyForecastFrom(ctx context.Context, dh hours.DateHour)
 		if err != nil {
 			return nil, err
 		}
-		forecasts = append(forecasts, row)
+		ef = append(ef, row)
 	}
 
-	return forecasts, nil
+	return ef, nil
 }
 
 func (d *Database) PurgeEnergyForecast(ctx context.Context) error {

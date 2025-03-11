@@ -93,6 +93,7 @@ func (d *Database) SaveTimeSeries(ctx context.Context, row TimeSeriesRow) error 
 	return nil
 }
 
+/** Returns time series entries from this date and hour and every following same hour */
 func (d *Database) GetTimeSeriesForHour(ctx context.Context, dh hours.DateHour) ([]TimeSeriesRow, error) {
 	rows, err := d.read.Query(`
 		SELECT 

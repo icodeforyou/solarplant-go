@@ -63,8 +63,8 @@ func runEnergyPriceTask(logger *slog.Logger, db *database.Database, providers []
 }
 
 func needImmediateEnergyPriceUpdate(ctx context.Context, db *database.Database) bool {
-	dh := hours.FromNow().Add(1)
-	if _, err := db.GetEnergyPriceForHour(ctx, dh); err != nil {
+	dh := hours.FromNow().Add(12)
+	if _, err := db.GetEnergyPrice(ctx, dh); err != nil {
 		return true
 	}
 	return false

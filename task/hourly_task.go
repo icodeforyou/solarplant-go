@@ -56,13 +56,13 @@ func NewHourlyTask(
 			ef = database.EnergyForecastRow{}
 		}
 
-		ep, err := db.GetEnergyPriceForHour(ctx, currHour)
+		ep, err := db.GetEnergyPrice(ctx, currHour)
 		if err != nil {
 			logger.Error("hourly task error, getting energy price", slog.Any("error", err))
 			ep = database.EnergyPriceRow{}
 		}
 
-		planning, err := db.GetPlanningForHour(ctx, currHour)
+		planning, err := db.GetPlanning(ctx, currHour)
 		if err != nil {
 			logger.Error("hourly task error, getting planning", slog.Any("error", err))
 			planning = database.PlanningRow{}

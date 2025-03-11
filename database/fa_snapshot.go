@@ -41,7 +41,7 @@ func (d *Database) SaveFaSnapshot(ctx context.Context, row FaSnapshotRow) error 
 	return nil
 }
 
-func (d *Database) GetFaSnapshotForHour(ctx context.Context, dh hours.DateHour) (FaSnapshotRow, error) {
+func (d *Database) GetFaSnapshot(ctx context.Context, dh hours.DateHour) (FaSnapshotRow, error) {
 	row := d.read.QueryRowContext(ctx, `
 		SELECT date, hour, data
 		FROM fa_snapshot
@@ -52,7 +52,7 @@ func (d *Database) GetFaSnapshotForHour(ctx context.Context, dh hours.DateHour) 
 	var r FaSnapshotRow
 	err := row.Scan(&r.When.Date, &r.When.Hour, &jsonData)
 	if err == sql.ErrNoRows {
-		return FaSnapshotRow{}, nil
+		return FaSnapshotRow{}, sql.ErrNoRows
 	}
 	if err != nil {
 		return FaSnapshotRow{}, fmt.Errorf("fetching ferroamp snapshot for %s: %w", dh, err)

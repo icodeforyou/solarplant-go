@@ -55,7 +55,7 @@ func runForcastTask(logger *slog.Logger, db *database.Database, config config.Ap
 }
 
 func needImmediateForcastUpdate(ctx context.Context, db *database.Database) bool {
-	dh := hours.FromNow().Add(1)
+	dh := hours.FromNow().Add(12)
 	if _, err := db.GetWeatcherForecast(ctx, dh); err != nil {
 		return true
 	}

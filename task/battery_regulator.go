@@ -95,7 +95,7 @@ func (br *BatteryRegulator) adjustLoad(ctx context.Context) {
 	battStatus := br.faData.BatteryStatuses()
 
 	hour := hours.FromNow()
-	planning, err := br.db.GetPlanningForHour(ctx, hour)
+	planning, err := br.db.GetPlanning(ctx, hour)
 	if err != nil {
 		planning = database.PlanningRow{
 			When:     hour,

@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"github.com/angas/solarplant-go/calc"
@@ -56,12 +57,10 @@ func (d *Database) GetWeatcherForecast(ctx context.Context, dh hours.DateHour) (
 		dh.Date, dh.Hour)
 
 	var fc WeatherForecastRow
-	err := row.Scan(
-		&fc.When.Date,
-		&fc.When.Hour,
-		&fc.CloudCover,
-		&fc.Temperature,
-		&fc.Precipitation)
+	err := row.Scan(&fc.When.Date, &fc.When.Hour, &fc.CloudCover, &fc.Temperature, &fc.Precipitation)
+	if err == sql.ErrNoRows {
+		return WeatherForecastRow{}, sql.ErrNoRows
+	}
 	if err != nil {
 		return WeatherForecastRow{}, fmt.Errorf("fetching weather forecast for %s: %w", dh, err)
 	}

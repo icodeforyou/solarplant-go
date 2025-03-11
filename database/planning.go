@@ -42,6 +42,25 @@ func (d *Database) SavePanning(ctx context.Context, row PlanningRow) error {
 	return nil
 }
 
+func (d *Database) GetPlanning(ctx context.Context, dh hours.DateHour) (PlanningRow, error) {
+	row := d.read.QueryRowContext(ctx, `
+		SELECT date, hour, strategy
+		FROM planning
+		WHERE date = ? AND hour = ?`,
+		dh.Date, dh.Hour)
+
+	var pl PlanningRow
+	err := row.Scan(&pl.When.Date, &pl.When.Hour, &pl.Strategy)
+	if err == sql.ErrNoRows {
+		return PlanningRow{}, sql.ErrNoRows
+	}
+	if err != nil {
+		return PlanningRow{}, fmt.Errorf("scanning planning row: %w", err)
+	}
+
+	return pl, nil
+}
+
 func (d *Database) GetPlanningFrom(ctx context.Context, dh hours.DateHour) ([]PlanningRow, error) {
 	rows, err := d.read.QueryContext(ctx, `
 		SELECT date, hour, strategy
@@ -65,30 +84,6 @@ func (d *Database) GetPlanningFrom(ctx context.Context, dh hours.DateHour) ([]Pl
 	}
 
 	return res, nil
-}
-
-func (d *Database) GetPlanningForHour(ctx context.Context, dh hours.DateHour) (PlanningRow, error) {
-	rows, err := d.read.QueryContext(ctx, `
-		SELECT date, hour, strategy
-		FROM planning
-		WHERE date = ? AND hour = ?`,
-		dh.Date, dh.Hour)
-	if err != nil {
-		return PlanningRow{}, fmt.Errorf("fetching planning for %s: %w", dh, err)
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return PlanningRow{}, sql.ErrNoRows
-	}
-
-	var row PlanningRow
-	err = rows.Scan(&row.When.Date, &row.When.Hour, &row.Strategy)
-	if err != nil {
-		return PlanningRow{}, fmt.Errorf("scanning planning row: %w", err)
-	}
-
-	return row, nil
 }
 
 func (d *Database) GetDetailedPlanningFrom(ctx context.Context, dh hours.DateHour) ([]DetailedPlanningRow, error) {

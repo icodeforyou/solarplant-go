@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"github.com/angas/solarplant-go/calc"
@@ -33,7 +34,7 @@ func (d *Database) SaveEnergyPrices(ctx context.Context, rows []EnergyPriceRow) 
 	return nil
 }
 
-func (d *Database) GetEnergyPriceForHour(ctx context.Context, dh hours.DateHour) (EnergyPriceRow, error) {
+func (d *Database) GetEnergyPrice(ctx context.Context, dh hours.DateHour) (EnergyPriceRow, error) {
 	row := d.read.QueryRowContext(ctx, `SELECT
 		date, hour, price
 		FROM energy_price
@@ -42,7 +43,9 @@ func (d *Database) GetEnergyPriceForHour(ctx context.Context, dh hours.DateHour)
 
 	var ep EnergyPriceRow
 	err := row.Scan(&ep.When.Date, &ep.When.Hour, &ep.Price)
-	if err != nil {
+	if err == sql.ErrNoRows {
+		return EnergyPriceRow{}, sql.ErrNoRows
+	} else if err != nil {
 		return EnergyPriceRow{}, fmt.Errorf("fetching energy price for %s: %w", dh, err)
 	}
 
