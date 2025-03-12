@@ -90,7 +90,7 @@ func calcHistoryAverage(ctx context.Context, db *database.Database, config confi
 
 	for _, h := range tsh {
 		avg.Production += h.Production
-		avg.Consumption += h.Consumption + h.BatteryNetLoad
+		avg.Consumption += h.Consumption
 		avg.Temperature += h.Temperature
 		avg.CloudCover += float64(h.CloudCover)
 	}
