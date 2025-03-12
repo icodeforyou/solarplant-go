@@ -16,33 +16,33 @@ ferroamp:
 weather_forecast:
   latitude: 59.0000
   longitude: 16.2000
-  run_at: "0 */4 * * *"
+  run_at: "1 */4 * * *"
 
 energy_forecast:
-  hours_ahead: 8
+  hours_ahead: 12
   historical_days: 7
-  cloud_cover_impact: 0.5
-  run_at: "1 */4 * * *"
+  cloud_cover_impact: 0.6
+  run_at: "2 */1 * * *"
 
 energy_price:
   tax_including_vat: 0.535
   tax_reduction: 0.6
   grid_benefit: 0.02
-  area: SE3  
-  run_at: "2 */2 * * *"
+  area: SE3
+  run_at: "3 */1 * * *"
 
 planner:
-  hours_ahead: 8
-  run_at: "3 */1 * * *"
+  hours_ahead: 12
   grid_max_power: 25
+  run_at: "59 */1 * * *"
 
 battery_spec:
   capacity: 10
   min_level: 10
   max_level: 100
-  max_charge_rate: 3
+  max_charge_rate: 3.5
   max_discharge_rate: 3
-  degradation_cost: 0.5
+  degradation_cost: 0.35
 
 battery_regulator_strategy:
   interval: 10
@@ -50,7 +50,6 @@ battery_regulator_strategy:
 
 logging:
   db_level: DEBUG
-  db_attrs_format: JSON
+  db_attrs_format: TEXT
   db_max_entries: 10000
   console_level: DEBUG
-
