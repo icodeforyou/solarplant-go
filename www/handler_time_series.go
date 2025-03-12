@@ -33,9 +33,13 @@ type templateRow struct {
 func NewTimeSeriesHandler(logger *slog.Logger, db *database.Database, tm *TemplateManager, recentHours *database.RecentHours) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
-		thisHour := hours.FromNow()
-		hour := hours.FromNow().Sub(intOrDefault(r.URL, "hours", 12))
+
 		var rows []templateRow
+		thisHour := hours.FromNow()
+		hour := hours.FromMidnight()
+		if thisHour.Hour-hour.Hour < 12 {
+			hour = thisHour.Sub(12)
+		}
 
 		for {
 			recentHour, ok := recentHours.Get(hour)
