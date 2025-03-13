@@ -116,7 +116,6 @@ func (d *FaInMemData) SolarPower() float64 {
 func (d *FaInMemData) GridPower() float64 {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
-
 	return calc.TwoDecimals((d.data.Ehub.Pext.L1 + d.data.Ehub.Pext.L2 + d.data.Ehub.Pext.L3) / 1e3)
 }
 
@@ -124,7 +123,6 @@ func (d *FaInMemData) GridPower() float64 {
 func (d *FaInMemData) BatteryPower() float64 {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
-
 	return calc.TwoDecimals(d.data.Ehub.Pbat.Value / 1e3)
 }
 

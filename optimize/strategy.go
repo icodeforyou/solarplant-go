@@ -3,7 +3,7 @@ package optimize
 type Strategy int
 
 const (
-	StrategyDefault   Strategy = iota // Maximize self-consumption
+	StrategyDefault   Strategy = iota // Auto mode in Ferroamp, maximize self-consumption (or peek shaving)
 	StrategyPreserve                  // Preserve battery level
 	StrategyCharge                    // Buy power if produced power is not enough
 	StrategyDischarge                 // Sell excess power to the grid from the battery

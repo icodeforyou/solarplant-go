@@ -99,6 +99,6 @@ func (d *Database) GetWeatherForecastFrom(ctx context.Context, dh hours.DateHour
 	return forecasts, nil
 }
 
-func (d *Database) PurgeWeatherForecast(ctx context.Context) error {
-	return d.purge(ctx, "weather_forecast")
+func (d *Database) PurgeWeatherForecast(ctx context.Context, retentionDays int) error {
+	return d.purgeData(ctx, "weather_forecast", retentionDays)
 }

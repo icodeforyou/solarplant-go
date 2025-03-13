@@ -12,11 +12,10 @@ import (
 )
 
 type Database struct {
-	logger        *slog.Logger
-	read          *sql.DB
-	write         *sql.DB
-	path          string
-	retentionDays uint
+	logger *slog.Logger
+	read   *sql.DB
+	write  *sql.DB
+	path   string
 }
 
 const initSQL = `
@@ -34,7 +33,7 @@ const initSQL = `
  * A new database connection.
  * Inspired by: https://theitsolutions.io/blog/modernc.org-sqlite-with-go
  */
-func New(ctx context.Context, path string, retentionDays uint) (*Database, error) {
+func New(ctx context.Context, path string) (*Database, error) {
 	sqlite.RegisterConnectionHook(func(conn sqlite.ExecQuerierContext, _ string) error {
 		_, err := conn.ExecContext(ctx, initSQL, nil)
 		return err
@@ -61,11 +60,10 @@ func New(ctx context.Context, path string, retentionDays uint) (*Database, error
 	}
 
 	return &Database{
-			logger:        slog.Default().With(slog.String("module", "database")),
-			read:          read,
-			write:         write,
-			path:          path,
-			retentionDays: retentionDays,
+			logger: slog.Default().With(slog.String("module", "database")),
+			read:   read,
+			write:  write,
+			path:   path,
 		},
 		nil
 }
@@ -79,9 +77,9 @@ func (d *Database) Close() {
 	d.write.Close()
 }
 
-func (d *Database) purge(ctx context.Context, table string) error {
+func (d *Database) purgeData(ctx context.Context, table string, retentionDays int) error {
 	d.logger.Debug(fmt.Sprintf("purging table %s", table))
-	duration := 24 * time.Hour * time.Duration(d.retentionDays)
+	duration := 24 * time.Hour * time.Duration(retentionDays)
 	before := hours.FromTime(time.Now().Add(-duration))
 	res, err := d.write.ExecContext(ctx, fmt.Sprintf(`
 		DELETE FROM %s 

@@ -202,6 +202,6 @@ func scanTimeSeriesHours(rows *sql.Rows) ([]TimeSeriesRow, error) {
 	return ts, nil
 }
 
-func (d *Database) PurgeTimeSeries(ctx context.Context) error {
-	return d.purge(ctx, "time_series")
+func (d *Database) PurgeTimeSeries(ctx context.Context, retentionDays int) error {
+	return d.purgeData(ctx, "time_series", retentionDays)
 }

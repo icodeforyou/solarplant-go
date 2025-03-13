@@ -20,15 +20,23 @@ type AppConfigApi struct {
 }
 
 type AppConfigDatabase struct {
-	Path          string
-	RetentionDays *uint `mapstructure:"retention_days"`
+	Path                string
+	DataRetentionDays   *int `mapstructure:"data_retention_days"`
+	BackupRetentionDays *int `mapstructure:"backup_retention_days"`
 }
 
-func (d AppConfigDatabase) GetRetentionDays() uint {
-	if d.RetentionDays == nil {
+func (d AppConfigDatabase) GetDataRetentionDays() int {
+	if d.DataRetentionDays == nil {
 		return 90
 	}
-	return *d.RetentionDays
+	return *d.DataRetentionDays
+}
+
+func (d AppConfigDatabase) GetBackupRetentionDays() int {
+	if d.BackupRetentionDays == nil {
+		return 90
+	}
+	return *d.BackupRetentionDays
 }
 
 type AppConfigFerroamp struct {

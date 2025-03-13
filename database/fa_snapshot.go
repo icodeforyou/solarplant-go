@@ -100,6 +100,6 @@ func (d *Database) GetFaSnapshotFrom(ctx context.Context, dh hours.DateHour) ([]
 	return result, nil
 }
 
-func (d *Database) PurgeFaSnapshot(ctx context.Context) error {
-	return d.purge(ctx, "fa_snapshot")
+func (d *Database) PurgeFaSnapshot(ctx context.Context, retentionDays int) error {
+	return d.purgeData(ctx, "fa_snapshot", retentionDays)
 }

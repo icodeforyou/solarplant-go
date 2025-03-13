@@ -1,5 +1,7 @@
 package ferroamp
 
+import "maps"
+
 type FaData struct {
 	Ehub EhubMessage
 	Sso  map[string]SsoMessage
@@ -16,22 +18,10 @@ func NewFaData() *FaData {
 }
 
 func (data *FaData) Clone() *FaData {
-	clone := &FaData{Ehub: data.Ehub}
-
-	clone.Sso = make(map[string]SsoMessage, len(data.Sso))
-	for k, v := range data.Sso {
-		clone.Sso[k] = v
+	return &FaData{
+		Ehub: data.Ehub,
+		Sso:  maps.Clone(data.Sso),
+		Eso:  maps.Clone(data.Eso),
+		Esm:  maps.Clone(data.Esm),
 	}
-
-	clone.Eso = make(map[string]EsoMessage, len(data.Eso))
-	for k, v := range data.Eso {
-		clone.Eso[k] = v
-	}
-
-	clone.Esm = make(map[string]EsmMessage, len(data.Esm))
-	for k, v := range data.Esm {
-		clone.Esm[k] = v
-	}
-
-	return clone
 }

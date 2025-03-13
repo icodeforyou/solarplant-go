@@ -101,6 +101,6 @@ func (d *Database) GetEnergyForecastFrom(ctx context.Context, dh hours.DateHour)
 	return ef, nil
 }
 
-func (d *Database) PurgeEnergyForecast(ctx context.Context) error {
-	return d.purge(ctx, "energy_forecast")
+func (d *Database) PurgeEnergyForecast(ctx context.Context, retentionDays int) error {
+	return d.purgeData(ctx, "energy_forecast", retentionDays)
 }
