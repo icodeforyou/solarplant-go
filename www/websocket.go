@@ -97,7 +97,7 @@ func (c *Client) WritePump() {
 	}
 }
 
-// Maintains the set of active clients and broadcasts messages to clients
+// Hub maintains the set of active clients and broadcasts messages to clients
 type Hub struct {
 	Broadcast  chan []byte
 	Register   chan *Client

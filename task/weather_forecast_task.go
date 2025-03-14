@@ -11,23 +11,23 @@ import (
 	"github.com/angas/solarplant-go/smhi"
 )
 
-func NewWeatcherForcastTask(logger *slog.Logger, db *database.Database, config config.AppConfigWeatcherForecast) func() {
+func NewWeatherForecastTask(logger *slog.Logger, db *database.Database, config config.AppConfigWeatherForecast) func() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if needImmediateForcastUpdate(ctx, db) {
+	if needImmediateForecastUpdate(ctx, db) {
 		logger.Info("need an immediate update of weather forecast")
-		runForcastTask(logger, db, config)
+		runForecastTask(logger, db, config)
 	} else {
 		logger.Debug("no need for immediate update of weather forecast")
 	}
 
 	return func() {
-		runForcastTask(logger, db, config)
+		runForecastTask(logger, db, config)
 	}
 }
 
-func runForcastTask(logger *slog.Logger, db *database.Database, config config.AppConfigWeatcherForecast) {
+func runForecastTask(logger *slog.Logger, db *database.Database, config config.AppConfigWeatherForecast) {
 	logger.Debug("running weather forecast task...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -46,7 +46,7 @@ func runForcastTask(logger *slog.Logger, db *database.Database, config config.Ap
 				Precipitation: ep.Precipitation,
 			}
 		}
-		if err = db.SaveForcast(ctx, rows); err != nil {
+		if err = db.SaveForecast(ctx, rows); err != nil {
 			logger.Error("weather forecast task error", slog.Any("error", err))
 		}
 	}
@@ -54,9 +54,9 @@ func runForcastTask(logger *slog.Logger, db *database.Database, config config.Ap
 	logger.Info("weather forecast task done", slog.Int("noOfHoursUpdated", len(fc)))
 }
 
-func needImmediateForcastUpdate(ctx context.Context, db *database.Database) bool {
+func needImmediateForecastUpdate(ctx context.Context, db *database.Database) bool {
 	dh := hours.FromNow().Add(12)
-	if _, err := db.GetWeatcherForecast(ctx, dh); err != nil {
+	if _, err := db.GetWeatherForecast(ctx, dh); err != nil {
 		return true
 	}
 	return false

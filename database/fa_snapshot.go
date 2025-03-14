@@ -60,7 +60,7 @@ func (d *Database) GetFaSnapshot(ctx context.Context, dh hours.DateHour) (FaSnap
 
 	err = json.Unmarshal([]byte(jsonData), &r.Data)
 	if err != nil {
-		return FaSnapshotRow{}, fmt.Errorf("unmarshalling ferroamp snapshot from JSON: %w", err)
+		return FaSnapshotRow{}, fmt.Errorf("unmarshaling ferroamp snapshot from JSON: %w", err)
 	}
 
 	return r, nil
@@ -91,7 +91,7 @@ func (d *Database) GetFaSnapshotFrom(ctx context.Context, dh hours.DateHour) ([]
 
 		err = json.Unmarshal([]byte(jsonData), &r.Data)
 		if err != nil {
-			return []FaSnapshotRow{}, fmt.Errorf("unmarshalling ferroamp snapshot from JSON: %w", err)
+			return []FaSnapshotRow{}, fmt.Errorf("unmarshaling ferroamp snapshot from JSON: %w", err)
 		}
 
 		result = append(result, r)

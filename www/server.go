@@ -42,11 +42,11 @@ func StartServer(
 	tasks *task.Tasks,
 	faInMem *ferroamp.FaInMemData,
 	recentHours *database.RecentHours,
-	config *config.AppConfig,
+	cnfg *config.AppConfig,
 	sysInfo SysInfo) *Server {
 
 	logger := slog.Default().With("module", "www")
-	tm, err := NewTemplateManager(logger, config.Api.WwwDir)
+	tm, err := NewTemplateManager(logger, cnfg.Api.WwwDir)
 	if err != nil {
 		logger.Error("template manager initialization error", slog.Any("error", err))
 	}
@@ -57,13 +57,13 @@ func StartServer(
 		fa:          faInMem,
 		hub:         NewHub(logger),
 		recentHours: recentHours,
-		config:      config,
+		config:      cnfg,
 		tm:          tm,
 	}
 
 	go s.hub.Run()
 
-	http.Handle("/", staticFilesHandler(config.Api.WwwDir))
+	http.Handle("/", staticFilesHandler(cnfg.Api.WwwDir))
 
 	http.Handle("GET /sysinfo", NewSysInfoHandler(
 		logger.With(slog.String("handler", "timeseries")),

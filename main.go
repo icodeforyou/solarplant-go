@@ -28,17 +28,17 @@ var (
 )
 
 func main() {
-	config := config.Load()
+	cnfg := config.Load()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	consolHandler := tint.NewHandler(os.Stdout, &tint.Options{
-		Level:      config.Logging.GetConsoleLevel(),
+	consoleHandler := tint.NewHandler(os.Stdout, &tint.Options{
+		Level:      cnfg.Logging.GetConsoleLevel(),
 		TimeFormat: time.RFC3339,
 	})
 
-	db, err := database.New(ctx, config.Database.Path)
+	db, err := database.New(ctx, cnfg.Database.Path)
 	if err != nil {
 		panic(err)
 	}
@@ -50,18 +50,18 @@ func main() {
 	}
 
 	logger := slog.New(logging.NewMultiHandler(
-		consolHandler,
-		logging.NewSQLiteHandler(db, config.Logging.GetDbLevel(), config.Logging.GetDbAttrsFormat())))
+		consoleHandler,
+		logging.NewSQLiteHandler(db, cnfg.Logging.GetDbLevel(), cnfg.Logging.GetDbAttrsFormat())))
 	slog.SetDefault(logger)
 
 	// Now we can use the logger to log database operations into the database itself
 	db.SetLogger(logger.With("module", "database"))
 
 	fa := ferroamp.New(
-		config.Ferroamp.Host,
-		config.Ferroamp.Port,
-		config.Ferroamp.Username,
-		config.Ferroamp.Password)
+		cnfg.Ferroamp.Host,
+		cnfg.Ferroamp.Port,
+		cnfg.Ferroamp.Username,
+		cnfg.Ferroamp.Password)
 
 	faInMem := ferroamp.NewFaInMemData()
 	fa.OnEhubMessage = faInMem.SetEHub
@@ -87,11 +87,11 @@ func main() {
 	}
 
 	energyPriceProviders := []types.EnergyPriceProvider{
-		elprisetjustnu.New(config.EnergyPrice.Area), // Primary provider
-		nordpool.New(config.EnergyPrice.Area),       // Secondary provider
+		elprisetjustnu.New(cnfg.EnergyPrice.Area), // Primary provider
+		nordpool.New(cnfg.EnergyPrice.Area),       // Secondary provider
 	}
 
-	tasks := task.NewTasks(db, energyPriceProviders, faInMem, recentHours, config)
+	tasks := task.NewTasks(db, energyPriceProviders, faInMem, recentHours, cnfg)
 	if isDevMode() {
 		logger.Info("dev mode, skipping task scheduling")
 	} else {
@@ -102,9 +102,9 @@ func main() {
 	regulatorStrategy := task.BatteryRegulatorStrategy{
 		Interval:        time.Second * 10,
 		UpdateThreshold: 0.1,
-		GridMaxPower:    config.Planner.GridMaxPower,
+		GridMaxPower:    cnfg.Planner.GridMaxPower,
 	}
-	batteryRegulator := task.NewBatteryRegulator(logger, db, config.BatterySpec, faInMem, regulatorStrategy)
+	batteryRegulator := task.NewBatteryRegulator(logger, db, cnfg.BatterySpec, faInMem, regulatorStrategy)
 	if isDevMode() {
 		logger.Info("dev mode, skipping battery regulator")
 	} else {
@@ -143,7 +143,7 @@ func main() {
 	}()
 
 	sysInfo := www.SysInfo{CommitHash: CommitHash, BuildTime: BuildTime, RuntimeVersion: runtime.Version()}
-	server := www.StartServer(db, tasks, faInMem, recentHours, config, sysInfo)
+	server := www.StartServer(db, tasks, faInMem, recentHours, cnfg, sysInfo)
 	server.Run(ctx)
 }
 

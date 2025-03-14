@@ -237,7 +237,7 @@ func (fa *Ferroamp) SetBatteryLoad(power float64) error {
 }
 
 func (fa *Ferroamp) Disconnect() {
-	fa.logger.Info("disconnecting Ferroamp MQTT client")
+	fa.logger.Info("disconnecting ferroamp mqtt client")
 	if fa.stopPurgeCh != nil {
 		close(fa.stopPurgeCh) // Signal the purge routine to stop
 	}
@@ -258,7 +258,7 @@ func (fa *Ferroamp) startPurgeRoutine() {
 					for transId, e := range fa.pending {
 						duration := time.Since(e.SentAt)
 						if duration > time.Minute {
-							fa.logger.Debug("purging prevoius request", slog.String("transId", transId), slog.Duration("duration", duration))
+							fa.logger.Debug("purging previous request", slog.String("transId", transId), slog.Duration("duration", duration))
 							close(e.DoneCh)
 							delete(fa.pending, transId)
 						}

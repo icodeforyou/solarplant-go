@@ -82,12 +82,13 @@ main {
   overflow: hidden;
   box-shadow: var(--box-shadow);
 }
+
 #menu-dropdown.visible {
   display: block;
 }
 
 .menu-item {
-  padding: 1.5rem 2rem;
+  padding: 1rem 1.5rem;
   font-size: large;
   white-space: nowrap;
   display: block;
@@ -98,6 +99,9 @@ main {
   background: none;
   box-shadow: none;
   text-align: left;
+  &:not(&:last-child) {
+    border-bottom: 0.5px solid var(--border-color);
+  }
 }
 .menu-item:hover,
 .menu-item:focus {

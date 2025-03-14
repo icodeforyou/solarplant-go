@@ -20,8 +20,10 @@ type AppConfigApi struct {
 }
 
 type AppConfigDatabase struct {
-	Path                string
-	DataRetentionDays   *int `mapstructure:"data_retention_days"`
+	Path string
+	// How many days data should be stored in database before it gets purged
+	DataRetentionDays *int `mapstructure:"data_retention_days"`
+	// How many days daily backup files should be stored before they gets deleted
 	BackupRetentionDays *int `mapstructure:"backup_retention_days"`
 }
 
@@ -43,27 +45,30 @@ type AppConfigFerroamp struct {
 	Host     string
 	Port     int16
 	Username string
-	Password string
+	Password string // Handed over by Ferroamp on request
 }
 
-type AppConfigWeatcherForecast struct {
-	Latitude  float64 // WGS84
-	Longitude float64 // WGS84
+type AppConfigWeatherForecast struct {
+	Latitude  float64 // Your approx latitude position (WGS84)
+	Longitude float64 // Your approx longitude position (WGS84)
 	RunAt     string  `mapstructure:"run_at"`
 }
 
 type AppConfigEnergyPrice struct {
-	Tax          float64 `mapstructure:"tax_including_vat"` // Energy tax in SEK/kWh including VAT
-	TaxReduction float64 `mapstructure:"tax_reduction"`     // Energy tax reduction in SEK/kWh when selling energy back to the grid
+	Tax          float64 `mapstructure:"tax_including_vat"` // Energy tax in SEK/kWh including VAT (energiskatt inkl. moms)
+	TaxReduction float64 `mapstructure:"tax_reduction"`     // Energy tax reduction in SEK/kWh when selling energy back to the grid (skattereduktion)
 	GridBenefit  float64 `mapstructure:"grid_benefit"`      // Grid benefit in SEK/kWh (nätnytta)
 	Area         string  `mapstructure:"area"`              // "SE1", "SE2", "SE3", "SE4"
 	RunAt        string  `mapstructure:"run_at"`
 }
 
 type AppConfigEnergyForecast struct {
-	HistoricalDays   int     `mapstructure:"historical_days"`
-	HoursAhead       int     `mapstructure:"hours_ahead"`
-	CloudCoverImpact float64 `mapstructure:"cloud_cover_impact"` // A value between 0 and 1 where 0 means no impact and 1 means full impact, i.e. no EV production when cloudiness is 8 octas
+	// How many hours ahead to forecast energy production and consumption, can stop earlier if data is missing
+	HoursAhead int `mapstructure:"hours_ahead"`
+	// How many days back should be consider when estimating future energy production and consumption
+	HistoricalDays int `mapstructure:"historical_days"`
+	// A value between 0 and 1 where 0 means no impact and 1 means full impact, i.e. no EV production when cloudiness is 8 octas
+	CloudCoverImpact float64 `mapstructure:"cloud_cover_impact"`
 	RunAt            string  `mapstructure:"run_at"`
 }
 
@@ -91,8 +96,8 @@ type AppConfigPlanner struct {
 }
 
 type BatteryRegulatorStrategy struct {
-	Interval        int     `mapstructure:"interval"`
-	UpdateThreshold float64 `mapstructure:"update_threshold"`
+	Interval        int     `mapstructure:"interval"`         // How often battery load status should be monitored in sec
+	UpdateThreshold float64 `mapstructure:"update_threshold"` // Threshold in watts for when to update battery state, helps avoid frequent updates for small power changes.
 }
 
 type AppConfigLogging struct {
@@ -135,13 +140,13 @@ type AppConfig struct {
 	Api                      AppConfigApi
 	Database                 AppConfigDatabase
 	Ferroamp                 AppConfigFerroamp
-	WeatherForecast          AppConfigWeatcherForecast `mapstructure:"weather_forecast"`
-	EnergyForecast           AppConfigEnergyForecast   `mapstructure:"energy_forecast"`
-	EnergyPrice              AppConfigEnergyPrice      `mapstructure:"energy_price"`
-	BatterySpec              AppConfigBatterySpec      `mapstructure:"battery_spec"`
-	Planner                  AppConfigPlanner          `mapstructure:"planner"`
-	BatteryRegulatorStrategy BatteryRegulatorStrategy  `mapstructure:"battery_regulator_strategy"`
-	Logging                  AppConfigLogging          `mapstructure:"logging"`
+	WeatherForecast          AppConfigWeatherForecast `mapstructure:"weather_forecast"`
+	EnergyForecast           AppConfigEnergyForecast  `mapstructure:"energy_forecast"`
+	EnergyPrice              AppConfigEnergyPrice     `mapstructure:"energy_price"`
+	BatterySpec              AppConfigBatterySpec     `mapstructure:"battery_spec"`
+	Planner                  AppConfigPlanner         `mapstructure:"planner"`
+	BatteryRegulatorStrategy BatteryRegulatorStrategy `mapstructure:"battery_regulator_strategy"`
+	Logging                  AppConfigLogging         `mapstructure:"logging"`
 }
 
 func Load() (config *AppConfig) {
@@ -158,7 +163,7 @@ func Load() (config *AppConfig) {
 	}
 
 	if err := viper.Unmarshal(&c); err != nil {
-		panic(fmt.Errorf("unable to unmarchal config file: %w", err))
+		panic(fmt.Errorf("unable to unmarshal config file: %w", err))
 	}
 
 	return &c

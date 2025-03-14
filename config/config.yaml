@@ -1,56 +1,56 @@
 api:
   address: localhost
   port: 8080
-  www_dir: ./www
+  www_dir: ./www # If not assigned, the server will serve embedded files. If assigned, the server will serve files from the directory, that must contain a "static" and "templates" directory
 
 database:
   path: ./data/solarplant.db
-  data_retention_days: 362
-  backup_retention_days: 30
+  data_retention_days: 365 # How many days data should be stored in database before it gets purged
+  backup_retention_days: 30 # How many days daily backup files should be stored before they gets deleted
 
 ferroamp:
   host: ferroamp.internal
   port: 1883
-  username: extapi
-  password: SECRET
+  username: extapi 
+  password: SECRET # Handed over by Ferroamp on request
 
 weather_forecast:
-  latitude: 59.0000
-  longitude: 16.2000
+  latitude: 59.0000 # Your approx latitude position (WGS84)
+  longitude: 16.2000 # Your approx longitude position (WGS84)
   run_at: "1 */4 * * *"
 
 energy_forecast:
-  hours_ahead: 12
-  historical_days: 7
-  cloud_cover_impact: 0.6
+  hours_ahead: 12 # How many hours ahead to forecast energy production and consumption, can stop earlier if data is missing
+  historical_days: 7 # How many days back should be consider when estimating future energy production and consumption
+  cloud_cover_impact: 0.6 # // A value between 0 and 1 where 0 means no impact and 1 means full impact, i.e. no EV production when cloudiness is 8 octas
   run_at: "2 */1 * * *"
 
 energy_price:
-  tax_including_vat: 0.535
-  tax_reduction: 0.6
-  grid_benefit: 0.02
-  area: SE3
+  tax_including_vat: 0.535 # Energy tax in SEK/kWh including VAT (energiskatt inkl. moms)
+  tax_reduction: 0.6 # Energy tax reduction in SEK/kWh when selling energy back to the grid (skattereduktion)
+  grid_benefit: 0.02 # Grid benefit in SEK/kWh (nätnytta)
+  area: SE3 # "SE1", "SE2", "SE3", "SE4"
   run_at: "3 */1 * * *"
 
 planner:
-  hours_ahead: 12
-  grid_max_power: 25
+  hours_ahead: 12 # How many hours ahead to plan for charging/discharging the battery
+  grid_max_power: 25 # Maximum power in kW that can be drawn from or pushed to the grid
   run_at: "59 */1 * * *"
 
 battery_spec:
-  capacity: 10
-  min_level: 10
-  max_level: 100
-  max_charge_rate: 3.5
-  max_discharge_rate: 3
-  degradation_cost: 0.35
+  capacity: 10 # Battery maximum capacity in kWh
+  min_level: 10 # Battery minimum level in percentage
+  max_level: 100 # Battery maximum level in percentage
+  max_charge_rate: 3.5 # Battery maximum charge power in kW
+  max_discharge_rate: 3 # Battery maximum discharge power in kW
+  degradation_cost: 0.35 # Cost of charging/discharging the battery in SEK/kWh
 
 battery_regulator_strategy:
-  interval: 10
-  update_threshold: 250
+  interval: 10 # How often battery load status should be monitored in sec
+  update_threshold: 250 # Threshold in watts for when to update battery state, helps avoid frequent updates for small power changes
 
 logging:
-  db_level: DEBUG
-  db_attrs_format: TEXT
-  db_max_entries: 10000
-  console_level: DEBUG
+  db_level: DEBUG # Min log level for database : "DEBUG", "INFO", "WARN", "ERROR", default: "INFO"
+  db_attrs_format: TEXT # Log attributes format: "TEXT", "JSON", default: "JSON"
+  db_max_entries: 10000 # Maximum number of log entries in the database, default: 10000
+  console_level: DEBUG # Min log level for database console: "DEBUG", "INFO", "WARN", "ERROR", default: "INFO"

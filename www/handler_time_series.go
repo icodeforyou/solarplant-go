@@ -9,7 +9,7 @@ import (
 
 	"github.com/angas/solarplant-go/database"
 	"github.com/angas/solarplant-go/hours"
-	"github.com/angas/solarplant-go/www/maybe"
+	"github.com/angas/solarplant-go/types/maybe"
 )
 
 type timeSeriesTemplRow struct {

@@ -27,19 +27,19 @@ func NewEnergyForecastTask(logger *slog.Logger, db *database.Database, config co
 	}
 }
 
-func runEnergyForecastTask(logger *slog.Logger, db *database.Database, config config.AppConfigEnergyForecast) {
+func runEnergyForecastTask(logger *slog.Logger, db *database.Database, cnfg config.AppConfigEnergyForecast) {
 	logger.Debug("running energy forecast task...")
 
 	hour := hours.FromNow()
-	rows := make([]database.EnergyForecastRow, 0, int(config.HoursAhead))
+	rows := make([]database.EnergyForecastRow, 0, int(cnfg.HoursAhead))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	for range int(config.HoursAhead) {
+	for range int(cnfg.HoursAhead) {
 		hour = hour.Add(1)
 
-		forecast, err := db.GetWeatcherForecast(ctx, hour)
+		forecast, err := db.GetWeatherForecast(ctx, hour)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				logger.Warn("energy forecast task problem, forecast not found", "hour", hour.String())
@@ -48,15 +48,15 @@ func runEnergyForecastTask(logger *slog.Logger, db *database.Database, config co
 			}
 		}
 
-		avg, err := calcHistoryAverage(ctx, db, config, hour)
+		avg, err := calcHistoryAverage(ctx, db, cnfg, hour)
 		if err != nil {
 			logger.Error("energy forecast task error, calculate history average", slog.Any("error", err))
 		}
 
 		// Normalize the production based on average cloud cover during the historical hours
-		avgProduction := avg.Production + avg.Production*config.CloudCoverImpact*avg.CloudCover/8.0
+		avgProduction := avg.Production + avg.Production*cnfg.CloudCoverImpact*avg.CloudCover/8.0
 		// Adjust the estimated production based on the forecasted cloud cover
-		estProduction := avgProduction - avgProduction*config.CloudCoverImpact*float64(forecast.CloudCover)/8.0
+		estProduction := avgProduction - avgProduction*cnfg.CloudCoverImpact*float64(forecast.CloudCover)/8.0
 
 		row := database.EnergyForecastRow{
 			When:        hour,

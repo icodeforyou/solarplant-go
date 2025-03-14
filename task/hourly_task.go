@@ -44,7 +44,7 @@ func NewHourlyTask(
 			return
 		}
 
-		fc, err := db.GetWeatcherForecast(ctx, currHour)
+		fc, err := db.GetWeatherForecast(ctx, currHour)
 		if err != nil {
 			logger.Error("hourly task error, getting weather forecast", slog.Any("error", err))
 			fc = database.WeatherForecastRow{}

@@ -33,7 +33,7 @@ func NewTasks(
 	return &Tasks{
 		cron:                cron.New(),
 		cnfg:                cnfg,
-		WeatherForecastTask: NewWeatcherForcastTask(logger.With(slog.String("task", "weather_forecast")), db, cnfg.WeatherForecast),
+		WeatherForecastTask: NewWeatherForecastTask(logger.With(slog.String("task", "weather_forecast")), db, cnfg.WeatherForecast),
 		EnergyForecastTask:  NewEnergyForecastTask(logger.With(slog.String("task", "energy_forecast")), db, cnfg.EnergyForecast),
 		EnergyPriceTask:     NewEnergyPriceTask(logger.With(slog.String("task", "energy_price")), db, energyPriceProviders),
 		TimeSeriesTask:      NewHourlyTask(logger.With(slog.String("task", "time_series")), db, cnfg.EnergyPrice, faInMem, recentHours),

@@ -45,7 +45,7 @@ func (d *FaInMemData) SetEsm(esm *EsmMessage) {
 	d.data.Esm[esm.ID.Value] = *esm
 }
 
-/** Battery level in percent (stage of chanrge) */
+/** Battery level in percent (stage of charge) */
 func (d *FaInMemData) BatteryLevel() float64 {
 	d.mu.RLock()
 	defer d.mu.RUnlock()

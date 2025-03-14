@@ -16,7 +16,7 @@ type WeatherForecastRow struct {
 	Precipitation float64
 }
 
-func (d *Database) SaveForcast(ctx context.Context, rows []WeatherForecastRow) error {
+func (d *Database) SaveForecast(ctx context.Context, rows []WeatherForecastRow) error {
 	for _, row := range rows {
 		d.logger.Debug("saving weather forecast",
 			"hour", row.When,
@@ -49,7 +49,7 @@ func (d *Database) SaveForcast(ctx context.Context, rows []WeatherForecastRow) e
 	return nil
 }
 
-func (d *Database) GetWeatcherForecast(ctx context.Context, dh hours.DateHour) (WeatherForecastRow, error) {
+func (d *Database) GetWeatherForecast(ctx context.Context, dh hours.DateHour) (WeatherForecastRow, error) {
 	row := d.read.QueryRowContext(ctx, `
 		SELECT date, hour, cloud_cover, temperature, precipitation
 		FROM weather_forecast 

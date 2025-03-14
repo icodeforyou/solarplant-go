@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/angas/solarplant-go/www/maybe"
+	"github.com/angas/solarplant-go/types/maybe"
 	"github.com/fsnotify/fsnotify"
 )
 
