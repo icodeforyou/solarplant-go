@@ -27,6 +27,21 @@ type TimeSeriesRow struct {
 	Strategy             string
 }
 
+type DailyStats struct {
+	Date             string
+	AvgCloudCover    float64
+	AvgTemperature   float64
+	AvgPrecipitation float64
+	AvgEnergyPrice   float64
+	TotProduction    float64
+	DiffProduction   float64
+	TotConsumption   float64
+	DiffConsumption  float64
+	TotGridImport    float64
+	TotGridExport    float64
+	TotCashFlow      float64
+}
+
 func (d *Database) SaveTimeSeries(ctx context.Context, row TimeSeriesRow) error {
 	d.logger.Debug("saving time series",
 		"hour", row.When,
@@ -154,7 +169,7 @@ func (d *Database) GetTimeSeriesFrom(ctx context.Context, dh hours.DateHour) ([]
 			strategy
 		FROM time_series
 		WHERE (date >= ? AND hour >= ?) OR (date > ?)
-		ORDER BY date, hour ASC`,
+		ORDER BY date DESC, hour DESC`,
 		dh.Date, dh.Hour, dh.Date)
 	if err != nil {
 		return nil, fmt.Errorf("fetching time series since %s: %w", dh, err)
@@ -200,6 +215,57 @@ func scanTimeSeriesHours(rows *sql.Rows) ([]TimeSeriesRow, error) {
 	}
 
 	return ts, nil
+}
+
+func (d *Database) GetDailyStats(ctx context.Context, noOfDays int) ([]DailyStats, error) {
+	rows, err := d.read.QueryContext(ctx, `
+		SELECT 
+			date, 
+			avg(cloud_cover),
+			avg(temperature),
+			avg(precipitation),
+			avg(energy_price),
+			sum(production),
+			avg(production-production_estimated),
+			sum(consumption),
+			avg(consumption-consumption_estimated),
+			sum(grid_import),
+			sum(grid_export),
+			sum(cash_flow)
+		FROM time_series
+		GROUP BY date
+		ORDER BY date DESC
+		LIMIT ?`,
+		noOfDays)
+	if err != nil {
+		return []DailyStats{}, fmt.Errorf("fetching daily stats: %w", err)
+	}
+
+	defer rows.Close()
+
+	var dailyStats []DailyStats
+	for rows.Next() {
+		var ds DailyStats
+		err := rows.Scan(
+			&ds.Date,
+			&ds.AvgCloudCover,
+			&ds.AvgTemperature,
+			&ds.AvgPrecipitation,
+			&ds.AvgEnergyPrice,
+			&ds.TotProduction,
+			&ds.DiffProduction,
+			&ds.TotConsumption,
+			&ds.DiffConsumption,
+			&ds.TotGridImport,
+			&ds.TotGridExport,
+			&ds.TotCashFlow)
+		if err != nil {
+			return []DailyStats{}, fmt.Errorf("scanning daily stats: %w", err)
+		}
+		dailyStats = append(dailyStats, ds)
+	}
+
+	return dailyStats, nil
 }
 
 func (d *Database) PurgeTimeSeries(ctx context.Context, retentionDays int) error {

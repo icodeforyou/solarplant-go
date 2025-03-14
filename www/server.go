@@ -77,6 +77,12 @@ func StartServer(
 		s.recentHours,
 	))
 
+	http.Handle("GET /dailystats", NewDailyStatsHandler(
+		logger.With(slog.String("handler", "timeseries")),
+		s.db,
+		s.tm,
+	))
+
 	http.Handle("GET /log", NewLogHandler(logger.With(
 		slog.String("handler", "log")),
 		s.config.Api,

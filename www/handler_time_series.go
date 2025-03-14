@@ -3,6 +3,7 @@ package www
 import (
 	"log/slog"
 	"net/http"
+	"slices"
 
 	_ "embed"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/angas/solarplant-go/www/maybe"
 )
 
-type templateRow struct {
+type timeSeriesTemplRow struct {
 	When                 hours.DateHour
 	CloudCover           maybe.Maybe[uint8]
 	Temperature          maybe.Maybe[float64]
@@ -34,7 +35,7 @@ func NewTimeSeriesHandler(logger *slog.Logger, db *database.Database, tm *Templa
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 
-		var rows []templateRow
+		var rows []timeSeriesTemplRow
 		thisHour := hours.FromNow()
 		hour := hours.FromMidnight()
 		if thisHour.Hour-hour.Hour < 12 {
@@ -48,7 +49,7 @@ func NewTimeSeriesHandler(logger *slog.Logger, db *database.Database, tm *Templa
 			}
 			hour = hour.Add(1)
 
-			rows = append(rows, templateRow{
+			rows = append(rows, timeSeriesTemplRow{
 				When:                 recentHour.When,
 				CloudCover:           maybe.Some(recentHour.Ts.CloudCover),
 				Temperature:          maybe.Some(recentHour.Ts.Temperature),
@@ -80,7 +81,7 @@ func NewTimeSeriesHandler(logger *slog.Logger, db *database.Database, tm *Templa
 			}
 
 			for _, f := range forecast {
-				row := templateRow{
+				row := timeSeriesTemplRow{
 					When:                 f.When,
 					CloudCover:           maybe.SqlNull(uint8(f.CloudCover.Int16), f.CloudCover.Valid),
 					Temperature:          maybe.SqlNull(f.Temperature.Float64, f.Temperature.Valid),
@@ -102,6 +103,10 @@ func NewTimeSeriesHandler(logger *slog.Logger, db *database.Database, tm *Templa
 				rows = append(rows, row)
 			}
 		}
+
+		slices.SortFunc(rows, func(i, j timeSeriesTemplRow) int {
+			return j.When.Compare(i.When)
+		})
 
 		if err := tm.ExecuteToWriter("time_series.html", rows, &w); err != nil {
 			logger.Error("handling time_series request", slog.Any("error", err))

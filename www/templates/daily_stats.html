@@ -1,0 +1,38 @@
+<table hx-get="/dailystats" hx-trigger="load delay:1m" hx-swap="outerHTML">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th title="Average cloud cover during the day">Avg Cloud (octas)</th>
+      <th title="Average temperature during the day">Avg Temp (°C)</th>
+      <th title="Total precipitation during the day">Tot Prec (mm)</th>
+      <th title="Average energy price during the day">Avg Price (SEK/kWh)</th>
+      <th title="Total production during the day">Tot Prod (kWh)</th>
+      <th
+        title="Average difference between estimated and actual production, a recurring negative value suggests that you should increase the parameter cloud_cover_impact">
+        Diff Prod (kWh)</th>
+      <th title="Total consumption during the day">Tot Cons (kWh)</th>
+      <th title="Average difference between estimated and actual consumption">Diff Cons (kWh)</th>
+      <th title="Total energy imported from the grid">Tot Grid Imp (kWh)</th>
+      <th title="Total energy exported to the grid">Tot Grid Exp (kWh)</th>
+      <th title="Total cash flow during the day, a positiv value is good a negative is bad">Tot Cash Flow (SEK)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+    <tr {{if .IsToday}}class="pulse" {{end}}>
+      <td style="white-space: nowrap;">{{ .Date }}</td>
+      <td>{{ MaybeFloat64 .AvgCloudCover 1 }}</td>
+      <td>{{ MaybeFloat64 .AvgTemperature 1 }}</td>
+      <td>{{ MaybeFloat64 .AvgPrecipitation 1 }}</td>
+      <td>{{ MaybeFloat64 .AvgEnergyPrice 4 }}</td>
+      <td>{{ MaybeFloat64 .TotProduction 2 }}</td>
+      <td>{{ MaybeFloat64 .DiffProduction 2 }}</td>
+      <td>{{ MaybeFloat64 .TotConsumption 2 }}</td>
+      <td>{{ MaybeFloat64 .DiffConsumption 2 }}</td>
+      <td>{{ MaybeFloat64 .TotGridImport 2 }}</td>
+      <td>{{ MaybeFloat64 .TotGridExport 2 }}</td>
+      <td>{{ MaybeFloat64 .TotCashFlow 2 }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
