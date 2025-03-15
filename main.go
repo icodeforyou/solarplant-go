@@ -22,10 +22,7 @@ import (
 	"github.com/lmittmann/tint"
 )
 
-var (
-	CommitHash = "n/a"
-	BuildTime  = "n/a"
-)
+var Version = "?.?.?"
 
 func main() {
 	cnfg := config.Load()
@@ -142,7 +139,7 @@ func main() {
 		}
 	}()
 
-	sysInfo := www.SysInfo{CommitHash: CommitHash, BuildTime: BuildTime, RuntimeVersion: runtime.Version()}
+	sysInfo := www.SysInfo{Version: Version, RuntimeVersion: runtime.Version()}
 	server := www.StartServer(db, tasks, faInMem, recentHours, cnfg, sysInfo)
 	server.Run(ctx)
 }

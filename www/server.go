@@ -19,8 +19,7 @@ import (
 )
 
 type SysInfo struct {
-	CommitHash     string
-	BuildTime      string
+	Version        string
 	RuntimeVersion string
 }
 
