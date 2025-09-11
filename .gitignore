@@ -1,5 +1,7 @@
 *.tar
 .env
+.vscode
+docker-compose.sublime-workspace
 bin/
 data/
 deploy.sh
