@@ -7,8 +7,8 @@ import (
 
 	_ "embed"
 
-	"github.com/angas/solarplant-go/config"
-	"github.com/angas/solarplant-go/database"
+	"github.com/icodeforyou/solarplant-go/config"
+	"github.com/icodeforyou/solarplant-go/database"
 )
 
 func NewLogHandler(logger *slog.Logger, config config.AppConfigApi, db *database.Database, tm *TemplateManager) http.HandlerFunc {

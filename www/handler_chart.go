@@ -6,9 +6,9 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/angas/solarplant-go/database"
-	"github.com/angas/solarplant-go/hours"
-	"github.com/angas/solarplant-go/www/chartjs"
+	"github.com/icodeforyou/solarplant-go/database"
+	"github.com/icodeforyou/solarplant-go/hours"
+	"github.com/icodeforyou/solarplant-go/www/chartjs"
 )
 
 func NewChartHandler(logger *slog.Logger, db *database.Database) http.HandlerFunc {

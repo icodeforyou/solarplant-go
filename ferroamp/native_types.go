@@ -1,7 +1,7 @@
 package ferroamp
 
 import (
-	"github.com/angas/solarplant-go/calc"
+	"github.com/icodeforyou/solarplant-go/calc"
 )
 
 type ValueObject[T ~float64 | ~int64] struct {

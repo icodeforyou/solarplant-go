@@ -1,4 +1,4 @@
-module github.com/angas/solarplant-go
+module github.com/icodeforyou/solarplant-go
 
 go 1.24.3
 

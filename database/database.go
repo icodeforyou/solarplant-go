@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/angas/solarplant-go/hours"
+	"github.com/icodeforyou/solarplant-go/hours"
 	sqlite "modernc.org/sqlite"
 )
 

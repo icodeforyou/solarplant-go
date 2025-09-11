@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/angas/solarplant-go/config"
+	"github.com/icodeforyou/solarplant-go/config"
 )
 
 // TODO: Write test for Input.SellPrice and Input.

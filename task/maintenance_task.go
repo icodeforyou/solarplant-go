@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/angas/solarplant-go/config"
-	"github.com/angas/solarplant-go/database"
+	"github.com/icodeforyou/solarplant-go/config"
+	"github.com/icodeforyou/solarplant-go/database"
 )
 
 func NewMaintenanceTask(logger *slog.Logger, db *database.Database, cnfg *config.AppConfig) func() {

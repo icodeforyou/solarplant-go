@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/angas/solarplant-go/hours"
+	"github.com/icodeforyou/solarplant-go/hours"
 )
 
 type TimeSeriesRow struct {

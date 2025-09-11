@@ -7,10 +7,10 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/angas/solarplant-go/calc"
-	"github.com/angas/solarplant-go/config"
-	"github.com/angas/solarplant-go/database"
-	"github.com/angas/solarplant-go/hours"
+	"github.com/icodeforyou/solarplant-go/calc"
+	"github.com/icodeforyou/solarplant-go/config"
+	"github.com/icodeforyou/solarplant-go/database"
+	"github.com/icodeforyou/solarplant-go/hours"
 )
 
 type historyAverage struct {

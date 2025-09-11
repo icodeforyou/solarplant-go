@@ -11,15 +11,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/angas/solarplant-go/config"
-	"github.com/angas/solarplant-go/database"
-	"github.com/angas/solarplant-go/elprisetjustnu"
-	"github.com/angas/solarplant-go/ferroamp"
-	"github.com/angas/solarplant-go/logging"
-	"github.com/angas/solarplant-go/nordpool"
-	"github.com/angas/solarplant-go/task"
-	"github.com/angas/solarplant-go/types"
-	"github.com/angas/solarplant-go/www"
+	"github.com/icodeforyou/solarplant-go/config"
+	"github.com/icodeforyou/solarplant-go/database"
+	"github.com/icodeforyou/solarplant-go/elprisetjustnu"
+	"github.com/icodeforyou/solarplant-go/ferroamp"
+	"github.com/icodeforyou/solarplant-go/hours"
+	"github.com/icodeforyou/solarplant-go/logging"
+	"github.com/icodeforyou/solarplant-go/nordpool"
+	"github.com/icodeforyou/solarplant-go/task"
+	"github.com/icodeforyou/solarplant-go/types"
+	"github.com/icodeforyou/solarplant-go/www"
 	"github.com/lmittmann/tint"
 )
 
@@ -40,6 +41,10 @@ func main() {
 	cnfg, err := config.Load(*configPath)
 	if err != nil {
 		panic(fmt.Sprintf("failed to load config: %v", err))
+	}
+
+	if err := hours.SetGuiTimezone(cnfg.Gui.GetTimezone()); err != nil {
+		panic(fmt.Sprintf("failed to set GUI timezone: %v", err))
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

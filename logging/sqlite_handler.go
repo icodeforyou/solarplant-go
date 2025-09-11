@@ -10,7 +10,7 @@ import (
 
 	"slices"
 
-	"github.com/angas/solarplant-go/database"
+	"github.com/icodeforyou/solarplant-go/database"
 )
 
 type LogAttrFormat string

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/angas/solarplant-go/hours"
+	"github.com/icodeforyou/solarplant-go/hours"
 )
 
 type RecentHour struct {

@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/angas/solarplant-go/ferroamp"
-	"github.com/angas/solarplant-go/hours"
+	"github.com/icodeforyou/solarplant-go/ferroamp"
+	"github.com/icodeforyou/solarplant-go/hours"
 )
 
 type FaSnapshotRow struct {

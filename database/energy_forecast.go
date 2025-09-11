@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/angas/solarplant-go/calc"
-	"github.com/angas/solarplant-go/hours"
+	"github.com/icodeforyou/solarplant-go/calc"
+	"github.com/icodeforyou/solarplant-go/hours"
 )
 
 type EnergyForecastRow struct {

@@ -1,7 +1,7 @@
 package optimize
 
 import (
-	"github.com/angas/solarplant-go/config"
+	"github.com/icodeforyou/solarplant-go/config"
 )
 
 type Battery struct {

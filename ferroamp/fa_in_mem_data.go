@@ -3,7 +3,7 @@ package ferroamp
 import (
 	"sync"
 
-	"github.com/angas/solarplant-go/calc"
+	"github.com/icodeforyou/solarplant-go/calc"
 )
 
 type FaInMemData struct {

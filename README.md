@@ -6,7 +6,7 @@ This application orchestrates battery management in a Ferroamp system by optimiz
 
 ## Getting started
 
-To begin with, you must adapt the [configuration file](config/config.yaml) to your equipment, geo location and electricity contract. The next step is to figure out how to run Solarplant. The easiest way is probably, if you have a spare Linux machine, to download a pre-built binary from [releases](https://github.com/angas/solarplant-go/releases). Make sure you also include the configuration file along with the binary. This approach will at least let you try the system, but for any other purpose you have to run it as a service or with Docker.
+To begin with, you must adapt the [configuration file](config/config.yaml) to your equipment, geo location and electricity contract. The next step is to figure out how to run Solarplant. The easiest way is probably, if you have a spare Linux machine, to download a pre-built binary from [releases](https://github.com/icodeforyou/solarplant-go/releases). Make sure you also include the configuration file along with the binary. This approach will at least let you try the system, but for any other purpose you have to run it as a service or with Docker.
 
 > [!NOTE]  
 > Solarplant should be active for a few days in order to gather enough data to make any reliable estimations on production and consumption.
@@ -22,7 +22,7 @@ docker run -d \
   -v "$(pwd)/data/:/app/data/" \
   -v "$(pwd)/config/:/app/config/" \
   --restart always \
-  ghcr.io/angas/solarplant-go:latest
+  ghcr.io/icodeforyou/solarplant-go:latest
 ```
 
 or if you prefer Docker Compose...
@@ -30,7 +30,7 @@ or if you prefer Docker Compose...
 ```yaml
 services:
   solarplant:
-    image: ghcr.io/angas/solarplant-go:latest
+    image: ghcr.io/icodeforyou/solarplant-go:latest
     ports:
       - "8080:8080"
     volumes:
@@ -42,7 +42,7 @@ services:
 ### Build from source
 
 1. Download and install the latest [golang](https://go.dev/dl/) release. 
-2. Clone this repository `git clone git@github.com:angas/solarplant-go.git`.
+2. Clone this repository `git clone git@github.com:icodeforyou/solarplant-go.git`.
 3. Run the provided `build.sh` script and then grab the binary in the `./bin` directory.
 
 ### Configuration

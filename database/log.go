@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"time"
+
+	"github.com/icodeforyou/solarplant-go/hours"
 )
 
 type LogEntryRow struct {
@@ -12,6 +14,10 @@ type LogEntryRow struct {
 	Level     int
 	Message   string
 	Attrs     string
+}
+
+func (r LogEntryRow) LocalizedTimestamp() string {
+	return hours.FormatTimeInGuiTimezone(r.Timestamp)
 }
 
 func (d *Database) SaveLogEntry(ctx context.Context, r LogEntryRow) error {

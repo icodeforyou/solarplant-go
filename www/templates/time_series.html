@@ -1,7 +1,7 @@
 <table hx-get="/timeseries" hx-trigger="load delay:1m" hx-swap="outerHTML">
   <thead>
     <tr>
-      <th>Start Hour (UTC)</th>
+      <th>Start Hour</th>
       <th title="Cloud cover between 0-8">Cloud (octas)</th>
       <th title="Temperature forecast">Temp (°C)</th>
       <th title="Energy Price in SEK including VATs and Grid Benefit">Price (SEK/kWh)</th>
@@ -20,7 +20,7 @@
   <tbody>
     {{ range . }}
     <tr {{if eq .ComparedToThisHour 0}}class="pulse" {{else if gt .ComparedToThisHour 0}}class="faded" {{end}}>
-      <td style="white-space: nowrap;">{{ .When.Date }} - {{ .When.Hour }}</td>
+      <td style="white-space: nowrap;">{{ .When.LocalizedString }}</td>
       <td>{{ MaybeUint8 .CloudCover }}</td>
       <td>{{ MaybeFloat64 .Temperature 1 }}</td>
       <td>{{ MaybeFloat64 .EnergyPrice 4 }}</td>
