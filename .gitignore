@@ -4,4 +4,4 @@
 bin/
 data/
 deploy.sh
-.vscode/
+.vscode/settings.json
