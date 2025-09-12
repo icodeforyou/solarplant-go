@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/angas/solarplant-go/config"
-	"github.com/angas/solarplant-go/database"
-	"github.com/angas/solarplant-go/ferroamp"
-	"github.com/angas/solarplant-go/types"
+	"github.com/icodeforyou/solarplant-go/config"
+	"github.com/icodeforyou/solarplant-go/database"
+	"github.com/icodeforyou/solarplant-go/ferroamp"
+	"github.com/icodeforyou/solarplant-go/types"
 	"github.com/robfig/cron/v3"
 )
 

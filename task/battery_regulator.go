@@ -6,12 +6,12 @@ import (
 	"math"
 	"time"
 
-	"github.com/angas/solarplant-go/optimize"
+	"github.com/icodeforyou/solarplant-go/optimize"
 
-	"github.com/angas/solarplant-go/config"
-	"github.com/angas/solarplant-go/database"
-	"github.com/angas/solarplant-go/ferroamp"
-	"github.com/angas/solarplant-go/hours"
+	"github.com/icodeforyou/solarplant-go/config"
+	"github.com/icodeforyou/solarplant-go/database"
+	"github.com/icodeforyou/solarplant-go/ferroamp"
+	"github.com/icodeforyou/solarplant-go/hours"
 )
 
 type BatteryRegulatorStrategy struct {

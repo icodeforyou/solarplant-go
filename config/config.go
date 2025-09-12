@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/angas/solarplant-go/logging"
+	"github.com/icodeforyou/solarplant-go/logging"
 	"github.com/spf13/viper"
 )
 
@@ -100,6 +100,18 @@ type BatteryRegulatorStrategy struct {
 	UpdateThreshold float64 `mapstructure:"update_threshold"` // Threshold in watts for when to update battery state, helps avoid frequent updates for small power changes.
 }
 
+type AppConfigGui struct {
+	// Timezone for displaying times in the GUI, default: UTC
+	Timezone *string `mapstructure:"timezone"`
+}
+
+func (g AppConfigGui) GetTimezone() string {
+	if g.Timezone == nil {
+		return "UTC"
+	}
+	return *g.Timezone
+}
+
 type AppConfigLogging struct {
 	// Min log level for database : "DEBUG", "INFO", "WARN", "ERROR", default: "INFO"
 	DbLevel *string `mapstructure:"db_level"`
@@ -146,6 +158,7 @@ type AppConfig struct {
 	BatterySpec              AppConfigBatterySpec     `mapstructure:"battery_spec"`
 	Planner                  AppConfigPlanner         `mapstructure:"planner"`
 	BatteryRegulatorStrategy BatteryRegulatorStrategy `mapstructure:"battery_regulator_strategy"`
+	Gui                      AppConfigGui             `mapstructure:"gui"`
 	Logging                  AppConfigLogging         `mapstructure:"logging"`
 }
 

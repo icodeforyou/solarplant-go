@@ -12,6 +12,7 @@ const (
 
 var (
 	stockholmLoc *time.Location
+	guiLocation  *time.Location = time.UTC
 )
 
 func init() {
@@ -22,6 +23,15 @@ func init() {
 	}
 }
 
+func SetGuiTimezone(timezone string) error {
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return fmt.Errorf("failed to load timezone %s: %v", timezone, err)
+	}
+	guiLocation = loc
+	return nil
+}
+
 type DateHour struct {
 	Date string
 	Hour uint8
@@ -29,6 +39,15 @@ type DateHour struct {
 
 func (dh DateHour) String() string {
 	return fmt.Sprintf("%s %02d", dh.Date, dh.Hour)
+}
+
+func (dh DateHour) LocalizedString() string {
+	t, err := time.ParseInLocation(hourLayout, dh.String(), time.UTC)
+	if err != nil {
+		return dh.String()
+	}
+	localTime := t.In(guiLocation)
+	return fmt.Sprintf("%s %02d", localTime.Format(dateLayout), localTime.Hour())
 }
 
 func (dh DateHour) IsoString() string {
@@ -109,4 +128,8 @@ func FromIso(str string) time.Time {
 
 func LocationStockholm(t time.Time) time.Time {
 	return t.In(stockholmLoc)
+}
+
+func FormatTimeInGuiTimezone(t time.Time) string {
+	return t.In(guiLocation).Format("2006-01-02 15:04:05")
 }

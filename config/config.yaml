@@ -1,5 +1,5 @@
 api:
-  address: localhost
+  address: "0.0.0.0"
   port: 8080
   www_dir: ./www # If not assigned, the server will serve embedded files. If assigned, the server will serve files from the directory, that must contain a "static" and "templates" directory
 
@@ -9,14 +9,14 @@ database:
   backup_retention_days: 30 # How many days daily backup files should be stored before they gets deleted
 
 ferroamp:
-  host: ferroamp.internal
+  host: 192.168.10.217
   port: 1883
   username: extapi
-  password: SECRET # Handed over by Ferroamp on request
+  password: ferroampExtApi
 
 weather_forecast:
-  latitude: 59.0000 # Your approx latitude position (WGS84)
-  longitude: 16.2000 # Your approx longitude position (WGS84)
+  latitude: 56.861942539036484
+  longitude: 12.690466557283774
   run_at: "1 */4 * * *"
 
 energy_forecast:
@@ -38,19 +38,22 @@ planner:
   run_at: "59 */1 * * *"
 
 battery_spec:
-  capacity: 10 # Battery maximum capacity in kWh
+  capacity: 14.2 # Battery maximum capacity in kWh
   min_level: 10 # Battery minimum level in percentage
   max_level: 100 # Battery maximum level in percentage
-  max_charge_rate: 3.5 # Battery maximum charge power in kW
-  max_discharge_rate: 3 # Battery maximum discharge power in kW
+  max_charge_rate: 7 # Battery maximum charge power in kW
+  max_discharge_rate: 7 # Battery maximum discharge power in kW
   degradation_cost: 0.35 # Cost of charging/discharging the battery in SEK/kWh
 
 battery_regulator_strategy:
   interval: 10 # How often battery load status should be monitored in sec
   update_threshold: 250 # Threshold in watts for when to update battery state, helps avoid frequent updates for small power changes
 
+gui:
+  timezone: Europe/Stockholm # Timezone for displaying times in the GUI, default: UTC
+
 logging:
-  db_level: DEBUG # Min log level for database : "DEBUG", "INFO", "WARN", "ERROR", default: "INFO"
+  db_level: INFO # Min log level for database : "DEBUG", "INFO", "WARN", "ERROR", default: "INFO"
   db_attrs_format: TEXT # Log attributes format: "TEXT", "JSON", default: "JSON"
   db_max_entries: 10000 # Maximum number of log entries in the database, default: 10000
   console_level: DEBUG # Min log level for database console: "DEBUG", "INFO", "WARN", "ERROR", default: "INFO"

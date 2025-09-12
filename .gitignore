@@ -1,5 +1,7 @@
 *.tar
 .env
+*.sublime-workspace
 bin/
 data/
 deploy.sh
+.vscode/*

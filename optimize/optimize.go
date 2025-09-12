@@ -3,7 +3,7 @@ package optimize
 import (
 	"math"
 
-	"github.com/angas/solarplant-go/calc"
+	"github.com/icodeforyou/solarplant-go/calc"
 )
 
 type Forecast struct {

@@ -11,10 +11,10 @@ import (
 	"path"
 	"time"
 
-	"github.com/angas/solarplant-go/config"
-	"github.com/angas/solarplant-go/database"
-	"github.com/angas/solarplant-go/ferroamp"
-	"github.com/angas/solarplant-go/task"
+	"github.com/icodeforyou/solarplant-go/config"
+	"github.com/icodeforyou/solarplant-go/database"
+	"github.com/icodeforyou/solarplant-go/ferroamp"
+	"github.com/icodeforyou/solarplant-go/task"
 )
 
 type Server struct {

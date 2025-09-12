@@ -8,8 +8,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/angas/solarplant-go/hours"
-	"github.com/angas/solarplant-go/types"
+	"github.com/icodeforyou/solarplant-go/hours"
+	"github.com/icodeforyou/solarplant-go/types"
 )
 
 type rawPrice struct {

@@ -5,10 +5,10 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/angas/solarplant-go/config"
-	"github.com/angas/solarplant-go/database"
-	"github.com/angas/solarplant-go/hours"
-	"github.com/angas/solarplant-go/smhi"
+	"github.com/icodeforyou/solarplant-go/config"
+	"github.com/icodeforyou/solarplant-go/database"
+	"github.com/icodeforyou/solarplant-go/hours"
+	"github.com/icodeforyou/solarplant-go/smhi"
 )
 
 func NewWeatherForecastTask(logger *slog.Logger, db *database.Database, config config.AppConfigWeatherForecast) func() {

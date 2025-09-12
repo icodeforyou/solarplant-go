@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/angas/solarplant-go/database"
-	"github.com/angas/solarplant-go/hours"
-	"github.com/angas/solarplant-go/types"
+	"github.com/icodeforyou/solarplant-go/database"
+	"github.com/icodeforyou/solarplant-go/hours"
+	"github.com/icodeforyou/solarplant-go/types"
 )
 
 func NewEnergyPriceTask(logger *slog.Logger, db *database.Database, providers []types.EnergyPriceProvider) func() {
