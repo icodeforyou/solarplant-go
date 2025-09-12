@@ -53,7 +53,7 @@ gui:
   timezone: Europe/Stockholm # Timezone for displaying times in the GUI, default: UTC
 
 logging:
-  db_level: DEBUG # Min log level for database : "DEBUG", "INFO", "WARN", "ERROR", default: "INFO"
+  db_level: INFO # Min log level for database : "DEBUG", "INFO", "WARN", "ERROR", default: "INFO"
   db_attrs_format: TEXT # Log attributes format: "TEXT", "JSON", default: "JSON"
   db_max_entries: 10000 # Maximum number of log entries in the database, default: 10000
   console_level: DEBUG # Min log level for database console: "DEBUG", "INFO", "WARN", "ERROR", default: "INFO"

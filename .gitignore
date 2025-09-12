@@ -5,3 +5,5 @@ docker-compose.sublime-workspace
 bin/
 data/
 deploy.sh
+docker-compose.sublime-workspace
+.vscode/
