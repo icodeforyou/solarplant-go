@@ -64,10 +64,10 @@ func New(broker string, port int16, username string, password string) *Ferroamp 
 	opts.SetPassword(password)
 	opts.SetAutoReconnect(true)
 	opts.OnConnect = func(client mqtt.Client) {
-		logger.Info("ferroamp mqtt connected")
+		logger.Info("ferroamp mqtt connected", slog.Bool("isConnected", client.IsConnected()))
 	}
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
-		logger.Warn("ferroamp mqtt connection lost", slog.Any("error", err))
+		logger.Warn("ferroamp mqtt connection lost", slog.Any("error", err), slog.Bool("isConnected", client.IsConnected()))
 	}
 
 	mqttLogger := slog.Default().With("module", "mqtt")
@@ -89,13 +89,17 @@ func (fa *Ferroamp) Connect() error {
 	fa.logger.Debug("connecting ferroamp MQTT client")
 
 	if token := fa.mtqqClient.Connect(); token.Wait() && token.Error() != nil {
+		fa.logger.Error("failed to connect to MQTT broker", slog.Any("error", token.Error()))
 		return token.Error()
 	}
+
+	fa.logger.Info("MQTT connection established", slog.Bool("isConnected", fa.mtqqClient.IsConnected()))
 
 	fa.inactivityWatchdog()
 
 	token := fa.mtqqClient.SubscribeMultiple(topics, func(client mqtt.Client, msg mqtt.Message) {
 		fa.lastMessageTime.Reset()
+		fa.logger.Debug("received mqtt message", slog.String("topic", msg.Topic()), slog.Int("payloadLen", len(msg.Payload())))
 
 		switch msg.Topic() {
 		case "extapi/data/ehub":
@@ -181,9 +185,11 @@ func (fa *Ferroamp) Connect() error {
 	})
 
 	if token.Wait() && token.Error() != nil {
+		fa.logger.Error("failed to subscribe to topics", slog.Any("error", token.Error()))
 		return token.Error()
 	}
 
+	fa.logger.Info("successfully subscribed to all topics")
 	fa.startPurgeRoutine()
 
 	return nil
@@ -337,7 +343,8 @@ func (fa *Ferroamp) inactivityWatchdog() {
 				if fa.lastMessageTime.Elapsed() >= inactivityWarnTimeout {
 					if !inWarnState {
 						inWarnState = true
-						fa.logger.Warn(fmt.Sprintf("no incoming mqtt traffic for the last %.0f seconds", inactivityWarnTimeout.Seconds()))
+						fa.logger.Warn(fmt.Sprintf("no incoming mqtt traffic for the last %.0f seconds", inactivityWarnTimeout.Seconds()),
+							slog.Bool("isConnected", fa.mtqqClient.IsConnected()))
 					}
 				} else {
 					if inWarnState {
